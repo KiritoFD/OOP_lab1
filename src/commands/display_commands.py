@@ -1,6 +1,8 @@
 from .base import Command
 from ..core.html_model import HtmlModel
 from ..core.element import HtmlElement
+import re
+import os
 
 class DisplayCommand(Command):
     """显示命令的基类"""
@@ -30,8 +32,6 @@ class PrintTreeCommand(DisplayCommand):
     def _print_tree(self, element: HtmlElement, prefix: str = "", is_last: bool = True) -> None:
         """递归打印整个树"""
         # 打印当前元素，添加ID除非ID与标签名相同
-        id_info = f" (id={element.id})" if element.id and element.id != element.tag else ""
-        current_line = f"{prefix}{'└── ' if is_last else '├── '}{element.tag}{id_info}"
         print(current_line)
         
         # 计算子元素的前缀
