@@ -35,23 +35,13 @@ class DeleteCommand(Command):
     
     def _unregister_element_and_children(self, element):
         """递归地从模型中注销元素及其所有子元素"""
-        # 创建一个列表来保存要删除的所有ID
-        ids_to_remove = []
-        
-        # 递归收集元素及其所有子元素的ID
-        def collect_ids(elem):
-            ids_to_remove.append(elem.id)
-            for child in elem.children:
-                collect_ids(child)
-        
-        # 收集所有需要删除的ID
-        collect_ids(element)
-        
-        # 从模型的ID映射中删除所有收集到的ID
-        for id_to_remove in ids_to_remove:
-            if id_to_remove in self.model._id_map:
-                del self.model._id_map[id_to_remove]
-                print(f"Removed {id_to_remove} from ID map")
+        # 先递归处理所有子元素
+        for child in element.children[:]:  # 使用切片创建副本，因为我们会修改列表
+            self._unregister_element_and_children(child)
+            
+        # 从模型的ID映射中注销当前元素
+        if element.id in self.model._id_map:
+            self.model._unregister_id(element)
     
     def execute(self) -> bool:
         """执行删除命令"""
@@ -139,19 +129,9 @@ class DeleteCommand(Command):
             
     def _register_element_and_children(self, element):
         """递归地向模型注册元素及其所有子元素"""
-        # 创建一个列表来保存要恢复的元素
-        elements_to_register = []
+        # 注册当前元素
+        self.model._register_id(element)
         
-        # 递归收集元素及其所有子元素
-        def collect_elements(elem, elements_list):
-            elements_list.append(elem)
-            for child in elem.children:
-                collect_elements(child, elements_list)
-        
-        # 收集所有需要恢复的元素
-        collect_elements(element, elements_to_register)
-        
-        # 将所有元素注册到模型中
-        for elem in elements_to_register:
-            self.model._register_id(elem)
-            print(f"Re-registered {elem.id} in ID map")
+        # 递归处理所有子元素
+        for child in element.children:
+            self._register_element_and_children(child)

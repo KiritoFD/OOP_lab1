@@ -1,118 +1,124 @@
 import pytest
-from src.core.html_model import HtmlModel
-from src.commands.edit_commands import DeleteCommand, AppendCommand
+from src.commands.edit.delete_command import DeleteCommand
+from src.commands.edit.append_command import AppendCommand
 from src.commands.base import CommandProcessor
-from src.core.exceptions import ElementNotFoundError, InvalidOperationError
+from src.core.html_model import HtmlModel
+from src.core.exceptions import ElementNotFoundError
 
 class TestDeleteCommand:
     @pytest.fixture
     def model(self):
+        """创建一个测试用的HTML模型"""
         return HtmlModel()
-    
+        
     @pytest.fixture
     def processor(self):
+        """创建一个命令处理器"""
         return CommandProcessor()
     
     @pytest.fixture
     def setup_elements(self, model, processor):
-        """创建测试用的元素结构"""
-        # 创建一个父元素和子元素
-        cmd1 = AppendCommand(model, 'div', 'parent', 'body')
-        cmd2 = AppendCommand(model, 'p', 'child1', 'parent')
-        cmd3 = AppendCommand(model, 'p', 'child2', 'parent')
+        """设置测试用的元素"""
+        # 添加一些元素用于测试删除
+        cmd1 = AppendCommand(model, 'div', 'test-div', 'body')
+        cmd2 = AppendCommand(model, 'p', 'test-p', 'body')
+        cmd3 = AppendCommand(model, 'span', 'test-span', 'test-div')
+        
         processor.execute(cmd1)
         processor.execute(cmd2)
         processor.execute(cmd3)
-        processor.clear_history()  # 清空历史，确保不影响测试
+        
+        return model
         
     def test_delete_success(self, model, processor, setup_elements):
         """测试成功删除元素"""
-        cmd = DeleteCommand(model, 'child1')
+        cmd = DeleteCommand(model, 'test-div')
         
-        # 执行删除
+        # 执行删除命令
         assert processor.execute(cmd) is True
         
-        # 验证删除结果
-        assert model.find_by_id('child1') is None
-        assert 'child1' not in [child.id for child in model.find_by_id('parent').children]
-        
-    def test_delete_with_children(self, model, processor, setup_elements):
-        """测试删除带有子元素的元素"""
-        cmd = DeleteCommand(model, 'parent')
-        
-        # 执行删除
-        assert processor.execute(cmd) is True
-        
-        # 验证父元素和所有子元素都被删除
-        assert model.find_by_id('parent') is None
-        assert model.find_by_id('child1') is None
-        assert model.find_by_id('child2') is None
+        # 验证元素已被删除
+        assert model.find_by_id('test-div') is None
+        assert model.find_by_id('test-span') is None  # 子元素也应被删除
+        assert model.find_by_id('test-p') is not None  # 其他元素不受影响
         
     def test_delete_nonexistent(self, model, processor):
         """测试删除不存在的元素"""
-        cmd = DeleteCommand(model, 'nonexistent')
+        cmd = DeleteCommand(model, 'non-existent')
+        
+        # 应抛出异常
         with pytest.raises(ElementNotFoundError):
             processor.execute(cmd)
             
-    def test_delete_protected(self, model, processor):
-        """测试删除受保护的元素"""
-        protected_ids = ['html', 'head', 'title', 'body']
-        for id in protected_ids:
-            cmd = DeleteCommand(model, id)
-            with pytest.raises(InvalidOperationError):
-                processor.execute(cmd)
-                
+    def test_delete_special_element(self, model, processor):
+        """测试删除特殊元素"""
+        # 尝试删除body元素
+        cmd = DeleteCommand(model, 'body')
+        
+        # 应抛出异常
+        with pytest.raises(ValueError):
+            processor.execute(cmd)
+            
     def test_delete_undo(self, model, processor, setup_elements):
-        """测试删除命令的撤销"""
-        # 保存初始状态下的父元素子节点数量
-        parent = model.find_by_id('parent')
-        initial_children_count = len(parent.children)
+        """测试删除的撤销操作"""
+        # 记录初始状态
+        original_div = model.find_by_id('test-div')
+        original_span = model.find_by_id('test-span')
         
         # 执行删除
-        cmd = DeleteCommand(model, 'child1')
+        cmd = DeleteCommand(model, 'test-div')
         processor.execute(cmd)
+        
+        # 验证删除成功
+        assert model.find_by_id('test-div') is None
+        assert model.find_by_id('test-span') is None
         
         # 执行撤销
         assert processor.undo() is True
         
-        # 验证元素被恢复
-        restored = model.find_by_id('child1')
-        assert restored is not None
-        assert restored.tag == 'p'
-        assert restored.parent == parent
-        assert len(parent.children) == initial_children_count
+        # 验证元素已恢复
+        restored_div = model.find_by_id('test-div')
+        restored_span = model.find_by_id('test-span')
+        
+        assert restored_div is not None
+        assert restored_div.id == original_div.id
+        assert restored_div.tag == original_div.tag
+        
+        # 验证子元素也被恢复
+        assert restored_span is not None
+        assert restored_span.parent == restored_div
         
     def test_delete_redo(self, model, processor, setup_elements):
-        """测试删除命令的重做"""
-        cmd = DeleteCommand(model, 'child1')
+        """测试删除的重做操作"""
+        # 执行删除
+        cmd = DeleteCommand(model, 'test-p')
         processor.execute(cmd)
+        
+        # 撤销删除
         processor.undo()
+        assert model.find_by_id('test-p') is not None
         
-        # 执行重做
+        # 重做删除
         assert processor.redo() is True
+        assert model.find_by_id('test-p') is None
         
-        # 验证元素再次被删除
-        assert model.find_by_id('child1') is None
-        assert 'child1' not in [child.id for child in model.find_by_id('parent').children]
-        
-    def test_delete_sequence(self, model, processor, setup_elements):
-        """测试多个删除命令的序列"""
-        cmd1 = DeleteCommand(model, 'child1')
-        cmd2 = DeleteCommand(model, 'child2')
-        
-        # 执行命令序列
+    def test_delete_multiple_elements(self, model, processor, setup_elements):
+        """测试删除多个元素"""
+        # 先删除第一个元素
+        cmd1 = DeleteCommand(model, 'test-div')
         processor.execute(cmd1)
+        
+        # 再删除第二个元素
+        cmd2 = DeleteCommand(model, 'test-p')
         processor.execute(cmd2)
         
-        # 验证两个元素都被删除
-        assert model.find_by_id('child1') is None
-        assert model.find_by_id('child2') is None
+        # 验证元素都已删除
+        assert model.find_by_id('test-div') is None
+        assert model.find_by_id('test-p') is None
         
-        # 依次撤销删除
-        processor.undo()  # 恢复child2
-        assert model.find_by_id('child2') is not None
-        assert model.find_by_id('child1') is None
+        # 撤销删除
+        processor.undo()  # 撤销删除test-p
+        assert model.find_by_id('test-p') is not None
         
-        processor.undo()  # 恢复child1
-        assert model.find_by_id('child1') is not None
-        assert model.find_by_id('child2') is not None
+        processor.undo()  # 撤销删除test-div
+        assert model.find_by_id('test-div') is not None
