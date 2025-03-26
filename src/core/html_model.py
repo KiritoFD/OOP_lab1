@@ -1,133 +1,144 @@
-from typing import Dict, Optional
+from typing import Optional, Dict
 from .element import HtmlElement
 from .exceptions import DuplicateIdError, ElementNotFoundError
 
 class HtmlModel:
-    """HTML文档模型，管理整个HTML树结构"""
+    """HTML文档模型"""
     def __init__(self):
+        # 创建根元素
+        self.root = HtmlElement('html', 'html')  # 修改ID为'html'
         # 创建基本结构
-        self.root = HtmlElement('html')
-        self._id_map = {self.root.id: self.root}
-        
-        # 创建head和body节点
-        head = HtmlElement('head')
-        body = HtmlElement('body')
+        head = HtmlElement('head', 'head')
+        body = HtmlElement('body', 'body')
         self.root.add_child(head)
         self.root.add_child(body)
-        self._id_map[head.id] = head
-        self._id_map[body.id] = body
         
-        # 创建title节点
-        title = HtmlElement('title')
-        head.add_child(title)
-        self._id_map[title.id] = title
-
+        # ID到元素的映射
+        self._id_map: Dict[str, HtmlElement] = {
+            'html': self.root,  # 更新映射
+            'head': head,
+            'body': body
+        }
+        
     def find_by_id(self, id: str) -> Optional[HtmlElement]:
         """通过ID查找元素"""
         return self._id_map.get(id)
-
-    def insert_before(self, target_id: str, element: HtmlElement) -> bool:
-        """在目标元素之前插入新元素"""
+        
+    def _register_id(self, element: HtmlElement) -> None:
+        """注册元素ID到映射表"""
         if element.id in self._id_map:
-            raise DuplicateIdError(element.id)
+            raise DuplicateIdError(f"ID '{element.id}' 已存在")
+        self._id_map[element.id] = element
+        
+    def _unregister_id(self, element: HtmlElement) -> None:
+        """从映射表中移除元素ID"""
+        if element.id in self._id_map:
+            del self._id_map[element.id]
             
+    def insert_before(self, target_id: str, new_element: HtmlElement) -> bool:
+        """在指定元素前插入新元素"""
         target = self.find_by_id(target_id)
         if not target:
-            raise ElementNotFoundError(target_id)
-            
-        parent = target.parent
-        if not parent:
-            return False
-            
-        # 获取目标元素在父元素children中的索引
-        index = parent.children.index(target)
-        # 在该位置插入新元素
-        parent.children.insert(index, element)
-        element.parent = parent
-        
-        # 更新ID索引
-        self._id_map[element.id] = element
-        return True
+            raise ElementNotFoundError(f"未找到ID为 '{target_id}' 的元素")
 
-    def append_child(self, parent_id: str, tag_name: str = None, id_value: str = None, text: str = None) -> Optional[HtmlElement]:
-        """添加子元素
-        
-        可以接受以下两种调用方式:
-        1. append_child(parent_id, existing_element) - 添加已存在的元素
-        2. append_child(parent_id, tag_name, id_value, text) - 创建并添加新元素
-        """
+        parent = target.parent if target.parent else self.root
+
+        try:
+            # 注册新元素ID
+            self._register_id(new_element)
+
+            # 获取目标元素在父元素中的索引
+            index = parent.children.index(target)
+
+            # 设置父子关系
+            new_element.parent = parent
+            parent.children.insert(index, new_element)
+
+            # 调试输出
+            print(f"Inserted element '{new_element.id}' with parent '{new_element.parent.id}'")
+
+            return True
+
+        except Exception as e:
+            # 清理失败的插入操作
+            self._cleanup_after_failed_insert(new_element, parent)
+            raise
+            
+    def _cleanup_after_failed_insert(self, element: HtmlElement, parent: HtmlElement) -> None:
+        """清理失败的插入操作"""
+        if element.id in self._id_map:
+            self._unregister_id(element)
+        if element in parent.children:
+            parent.children.remove(element)
+        element.parent = None
+            
+    def _register_subtree_ids(self, root: HtmlElement) -> None:
+        """递归注册子树中所有元素的ID"""
+        for child in root.children:
+            if child.id:
+                self._register_id(child)
+            self._register_subtree_ids(child)
+            
+    def append_child(self, parent_id: str, tag: str, id: str, text: str = None) -> Optional[HtmlElement]:
+        """向指定元素追加子元素"""
         parent = self.find_by_id(parent_id)
         if not parent:
-            raise ElementNotFoundError(parent_id)
-            
-        # 如果第二个参数是HtmlElement对象，使用旧的实现
-        if isinstance(tag_name, HtmlElement):
-            element = tag_name
-            if element.id in self._id_map:
-                raise DuplicateIdError(element.id)
-                
-            parent.add_child(element)
-            self._id_map[element.id] = element
-            return element
-        
-        # 否则创建新元素
-        if tag_name is None:
-            return None
+            raise ElementNotFoundError(f"未找到ID为 '{parent_id}' 的父元素")
             
         # 创建新元素
-        element = HtmlElement(tag_name, id_value)
+        new_element = HtmlElement(tag, id)
         if text:
-            element.text = text
+            new_element.text = text
             
-        # 检查ID是否重复
-        if element.id in self._id_map:
-            raise DuplicateIdError(element.id)
-            
-        # 添加到父元素
-        parent.add_child(element)
-        self._id_map[element.id] = element
-        return element
-
-    def delete_element(self, element_id: str) -> bool:
-        """删除元素"""
-        element = self.find_by_id(element_id)
-        if not element:
-            raise ElementNotFoundError(element_id)
-            
-        if element.parent:
-            element.parent.remove_child(element)
-            del self._id_map[element_id]
-            return True
-        return False
-
-    def replace_content(self, new_root: HtmlElement) -> bool:
-        """替换整个文档内容
-        用于IO命令实现文件读取和初始化功能
-        """
         try:
-            # 清空当前模型
-            self._id_map.clear()
+            # 注册新元素ID
+            self._register_id(new_element)
             
-            # 深拷贝新的内容
-            def copy_element(src: HtmlElement) -> HtmlElement:
-                new_elem = HtmlElement(src.tag, src.id)
-                new_elem.text = src.text
-                for child in src.children:
-                    new_child = copy_element(child)
-                    new_elem.add_child(new_child)
-                    self._id_map[new_child.id] = new_child
-                return new_elem
+            # 添加到父元素
+            parent.add_child(new_element)
             
-            # 创建新的根节点
-            self.root = copy_element(new_root)
-            self._id_map[self.root.id] = self.root
-            return True
+            return new_element
             
         except Exception as e:
-            # 如果替换失败，保持原状
+            # 发生错误时回滚更改
+            if new_element.id in self._id_map:
+                self._unregister_id(new_element)
+            if new_element.parent:
+                new_element.parent.remove_child(new_element)
+            raise
+            
+    def delete_element(self, element_id: str) -> bool:
+        """删除指定元素"""
+        element = self.find_by_id(element_id)
+        if not element or not element.parent:
             return False
-
-    def can_have_children(self, element: HtmlElement) -> bool:
-        """检查元素是否可以有子元素"""
-        # 所有元素都可以有子元素
-        return True
+            
+        try:
+            # 递归注销所有子元素的ID
+            self._unregister_subtree_ids(element)
+            
+            # 从父元素中移除
+            return element.parent.remove_child(element)
+            
+        except Exception as e:
+            print(f"删除元素时发生错误: {str(e)}")
+            return False
+            
+    def _unregister_subtree_ids(self, root: HtmlElement) -> None:
+        """递归注销子树中所有元素的ID"""
+        for child in root.children:
+            if child.id:
+                self._unregister_id(child)
+            self._unregister_subtree_ids(child)
+            
+    def replace_content(self, new_root: HtmlElement) -> None:
+        """替换整个文档内容"""
+        # 清除旧的ID映射
+        self._id_map.clear()
+        
+        # 替换根元素
+        self.root = new_root
+        
+        # 重新注册所有ID
+        self._register_id(self.root)
+        self._register_subtree_ids(self.root)

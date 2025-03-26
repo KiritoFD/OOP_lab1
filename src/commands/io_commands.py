@@ -1,74 +1,80 @@
 from .base import Command
-from ..io_.parser import HtmlParser
-from ..io_.writer import HtmlWriter
 from ..core.html_model import HtmlModel
+from ..io.parser import HtmlParser
+from ..io.writer import HtmlWriter
 
-class IoCommand(Command):
-    """IO命令的基类，执行后会清空命令历史"""
-    def __init__(self, processor):
+class ReadCommand(Command):
+    """读取HTML文件命令"""
+    def __init__(self, model: HtmlModel, filepath: str):
         super().__init__()
-        self.processor = processor
-
-    def _do_execute(self) -> bool:
-        """子类实现具体的IO操作"""
-        raise NotImplementedError
-
+        self.model = model
+        self.filepath = filepath
+        self.recordable = False  # IO命令不记录到撤销历史
+        
     def execute(self) -> bool:
-        """执行IO操作并清空历史"""
-        result = self._do_execute()
-        if result:
-            self.processor.clear_history()
-        return result
-
+        """执行读取命令"""
+        try:
+            parser = HtmlParser()
+            new_model = parser.parse_file(self.filepath)
+            
+            if not new_model or not new_model.root:
+                print(f"解析文件失败: {self.filepath}")
+                return False
+                
+            # 替换模型内容
+            self.model.replace_content(new_model.root)
+            print(f"成功读取文件: {self.filepath}")
+            return True
+            
+        except Exception as e:
+            print(f"读取文件失败: {str(e)}")
+            return False
+            
     def undo(self) -> bool:
         """IO命令不支持撤销"""
         return False
 
-class ReadCommand(IoCommand):
-    """读取HTML文件命令"""
-    def __init__(self, processor, model: HtmlModel, filepath: str):
-        super().__init__(processor)
-        self.model = model
-        self.filepath = filepath
-
-    def _do_execute(self) -> bool:
-        try:
-            new_model = HtmlParser.parse_file(self.filepath)
-            return self.model.replace_content(new_model.root)
-        except Exception as e:
-            return False
-
-class SaveCommand(IoCommand):
+class SaveCommand(Command):
     """保存HTML文件命令"""
-    def __init__(self, processor, model: HtmlModel, filepath: str):
-        super().__init__(processor)
+    def __init__(self, model: HtmlModel, filepath: str):
+        super().__init__()
         self.model = model
         self.filepath = filepath
+        self.recordable = False  # IO命令不记录到撤销历史
+        
+    def execute(self) -> bool:
+        """执行保存命令"""
+        result = HtmlWriter.write_to_file(self.model, self.filepath)
+        if result:
+            print(f"成功保存文件: {self.filepath}")
+        return result
+            
+    def undo(self) -> bool:
+        """IO命令不支持撤销"""
+        return False
 
-    def _do_execute(self) -> bool:
-        try:
-            return HtmlWriter.write_file(self.model, self.filepath)
-        except Exception as e:
-            return False
-
-class InitCommand(IoCommand):
-    """初始化编辑器命令"""
-    def __init__(self, processor, model: HtmlModel):
-        super().__init__(processor)
+class InitCommand(Command):
+    """初始化HTML模型命令"""
+    def __init__(self, model: HtmlModel):
+        super().__init__()
         self.model = model
-
-    def _do_execute(self) -> bool:
+        self.recordable = False  # IO命令不记录到撤销历史
+        
+    def execute(self) -> bool:
+        """执行初始化命令"""
         try:
-            # 创建一个空的HTML文档结构
-            html_content = """
-<html>
-    <head>
-        <title></title>
-    </head>
-    <body></body>
-</html>
-"""
-            new_model = HtmlParser.parse_string(html_content)
-            return self.model.replace_content(new_model.root)
+            # 创建一个新的HTML模型
+            new_model = HtmlModel()
+            
+            # 替换当前模型内容
+            self.model.replace_content(new_model.root)
+            print("成功初始化编辑器")
+            return True
+            
         except Exception as e:
+            print(f"初始化编辑器失败: {str(e)}")
             return False
+            
+    def undo(self) -> bool:
+        """IO命令不支持撤销"""
+        return False

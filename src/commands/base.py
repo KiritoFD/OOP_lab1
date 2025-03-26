@@ -1,89 +1,142 @@
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
-from ..core.html_model import HtmlModel
+from .observer import CommandObserver
 
 class Command(ABC):
-    """命令基类"""
+    """命令基类，定义所有命令的共同接口"""
     def __init__(self):
-        self.recordable = True  # 是否记录到历史
-
+        self.recordable = True  # 是否记录到历史，用于撤销/重做
+    
     @abstractmethod
     def execute(self) -> bool:
-        """执行命令"""
+        """执行命令
+        
+        Returns:
+            执行成功返回True，否则返回False
+        """
         pass
-
+        
     @abstractmethod
     def undo(self) -> bool:
-        """撤销命令"""
+        """撤销命令
+        
+        Returns:
+            撤销成功返回True，否则返回False
+        """
         pass
 
 class CommandProcessor:
-    """命令处理器"""
+    """命令处理器，管理命令执行、撤销和重做"""
     def __init__(self):
-        self._history: List[Command] = []  # 已执行的命令
-        self._undone: List[Command] = []   # 已撤销的命令
-
+        self.history: List[Command] = []  # 历史命令
+        self.redos: List[Command] = []    # 被撤销的命令，用于重做
+        self.observers: List[CommandObserver] = []  # 观察者列表
+        
     def execute(self, command: Command) -> bool:
         """执行命令
-        如果是可记录的命令，执行成功后会被记录到历史，并清空重做栈
-        如果是不可记录的命令（如显示命令），则只执行不记录
-        """
-        # 执行命令
-        if not command.execute():
-            return False
-
-        # 处理命令记录
-        if hasattr(command, 'recordable') and command.recordable:
-            self._history.append(command)
-            self._undone.clear()  # 新命令执行后清空重做栈
         
-        return True
-
+        Args:
+            command: 要执行的命令
+            
+        Returns:
+            执行成功返回True，否则返回False
+        """
+        if not command:
+            return False
+            
+        result = command.execute()
+        
+        if result and command.recordable:
+            self.history.append(command)
+            # 执行新命令后，清空重做列表
+            self.redos.clear()
+            # 通知观察者命令已执行
+            self._notify_observers('execute', command=command)
+            
+        return result
+        
     def undo(self) -> bool:
-        """撤销上一个命令
-        会跳过不可撤销的命令（如显示命令）
+        """撤销最近一次执行的命令
+        
+        Returns:
+            撤销成功返回True，否则返回False
         """
-        while self._history:
-            command = self._history.pop()
-            # 跳过不可记录的命令
-            if not command.recordable:
-                continue
-                
-            # 执行撤销
-            if command.undo():
-                self._undone.append(command)
-                return True
-            else:
-                # 撤销失败，将命令放回历史
-                self._history.append(command)
-                return False
-                
+        # 查找最近一个可撤销的命令
+        while self.history:
+            command = self.history.pop()
+            
+            if command.recordable:
+                # 尝试撤销
+                if command.undo():
+                    # 添加到重做列表
+                    self.redos.append(command)
+                    # 通知观察者命令已撤销
+                    self._notify_observers('undo', command=command)
+                    return True
+                else:
+                    # 撤销失败，重新加入历史
+                    self.history.append(command)
+                    return False
+        
         return False
-
+        
     def redo(self) -> bool:
-        """重做上一个被撤销的命令
-        会跳过不可重做的命令（如显示命令）
+        """重做最近一次撤销的命令
+        
+        Returns:
+            重做成功返回True，否则返回False
         """
-        while self._undone:
-            command = self._undone.pop()
-            # 跳过不可记录的命令
-            if not command.recordable:
-                continue
-                
-            # 执行重做
-            if command.execute():
-                self._history.append(command)
-                return True
-            else:
-                # 重做失败，将命令放回撤销栈
-                self._undone.append(command)
-                return False
-                
-        return False
-
-    def clear_history(self) -> None:
-        """清空所有历史记录
-        在执行IO命令后调用，以防止撤销到不一致的状态
+        if not self.redos:
+            return False
+            
+        command = self.redos.pop()
+        
+        # 重新执行该命令
+        if command.execute():
+            # 添加回历史
+            self.history.append(command)
+            # 通知观察者命令已重做
+            self._notify_observers('redo', command=command)
+            return True
+        else:
+            # 重做失败
+            return False
+            
+    def clear_history(self):
+        """清空历史和重做列表"""
+        history_copy = self.history.copy()
+        redos_copy = self.redos.copy()
+        
+        self.history.clear()
+        self.redos.clear()
+        
+        # 通知观察者历史已清空
+        self._notify_observers('clear', previous_history=history_copy, previous_redos=redos_copy)
+        
+    def add_observer(self, observer: CommandObserver):
+        """添加观察者
+        
+        Args:
+            observer: 实现了CommandObserver接口的对象
         """
-        self._history.clear()
-        self._undone.clear()
+        if observer not in self.observers:
+            self.observers.append(observer)
+        
+    def remove_observer(self, observer: CommandObserver):
+        """移除观察者
+        
+        Args:
+            observer: 要移除的观察者
+        """
+        if observer in self.observers:
+            self.observers.remove(observer)
+            
+    def _notify_observers(self, event_type: str, **kwargs):
+        """通知所有观察者
+        
+        Args:
+            event_type: 事件类型
+            kwargs: 事件相关的其他参数
+        """
+        for observer in self.observers:
+            observer.on_command_event(event_type, **kwargs)
