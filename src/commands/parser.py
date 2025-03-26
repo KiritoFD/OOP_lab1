@@ -1,74 +1,27 @@
 import os
+import re
 from bs4 import BeautifulSoup
-from typing import Optional
-import chardet
-from ..core.exceptions import InvalidOperationError
 from ..core.element import HtmlElement
+from ..core.exceptions import InvalidOperationError
+from typing import Optional
+from ..core.html_model import HtmlModel
 
 class HtmlParser:
-    """HTML解析器，专门负责HTML文件的读取和解析"""
+    """HTML解析器，用于从文件或字符串解析HTML"""
     
-    def parse_file(self, file_path: str) -> HtmlElement:
+    def parse_file(self, file_path):
         """从文件解析HTML"""
-        # 验证文件
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"文件不存在: {file_path}")
+            raise FileNotFoundError(f"文件 '{file_path}' 不存在")
             
-        # 读取文件内容
-        content = self._read_file_with_encoding(file_path)
-        
-        # 解析HTML内容
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        if not content.strip():
+            raise InvalidOperationError("HTML文件内容为空")
+            
         return self.parse_string(content)
     
-    def load_html_file(self, file_path: str) -> HtmlElement:
-        """完整的HTML文件加载流程
-        
-        Args:
-            file_path: HTML文件路径
-            
-        Returns:
-            解析后的HtmlElement树根节点
-            
-        Raises:
-            FileNotFoundError: 文件不存在时抛出
-            InvalidOperationError: 文件内容为空时抛出
-        """
-        # 验证文件
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"文件不存在: {file_path}")
-            
-        # 读取文件内容
-        content = self._read_file_with_encoding(file_path)
-        
-        # 解析HTML内容
-        return self.parse_string(content)
-        
-    def _read_file_with_encoding(self, file_path: str) -> str:
-        """读取文件内容并处理编码"""
-        with open(file_path, 'rb') as f:
-            raw_content = f.read()
-            
-        if not raw_content.strip():
-            raise InvalidOperationError("文件内容为空")
-            
-        # 自动检测编码
-        encoding_info = chardet.detect(raw_content)
-        if encoding_info['confidence'] > 0.7:
-            try:
-                return raw_content.decode(encoding_info['encoding'])
-            except UnicodeDecodeError:
-                pass
-                
-        # 尝试常见编码
-        for encoding in ['utf-8', 'gb2312', 'gbk', 'iso-8859-1']:
-            try:
-                return raw_content.decode(encoding)
-            except UnicodeDecodeError:
-                continue
-                
-        # 如果都失败，使用替换模式
-        return raw_content.decode('utf-8', errors='replace')
-
     def parse_string(self, html_content):
         """从字符串解析HTML"""
         if not html_content or not html_content.strip():
@@ -113,15 +66,13 @@ class HtmlParser:
         # 创建元素
         element = HtmlElement(tag_name, tag_id)
         
-        # 设置属性 - 使用新的属性处理方法
+        # 设置属性
         for attr_name, attr_value in bs_tag.attrs.items():
             if attr_name != 'id':  # ID已经单独处理
                 if isinstance(attr_value, list):
                     # 处理多值属性如class
                     attr_value = ' '.join(attr_value)
-                
-                # 使用我们添加的set_attribute方法
-                element.attributes[attr_name] = attr_value
+                element.set_attribute(attr_name, attr_value)
                 
         # 处理文本内容
         # 获取元素的直接文本内容，不包括子元素的文本
@@ -129,9 +80,7 @@ class HtmlParser:
         text_nodes = [node for node in contents if isinstance(node, str)]
         if text_nodes:
             # 合并所有直接文本节点
-            combined_text = ''.join(text.strip() for text in text_nodes if text.strip())
-            if combined_text:
-                element.text = combined_text
+            element.text = ''.join(text.strip() for text in text_nodes if text.strip())
             
         # 处理子元素
         for child in bs_tag.children:

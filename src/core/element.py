@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
 
 class HtmlVisitor(ABC):
@@ -15,6 +15,7 @@ class HtmlElement:
         self.text = None
         self.children: List[HtmlElement] = []
         self.parent: Optional[HtmlElement] = None
+        self.attributes: Dict[str, str] = {}  # 添加属性字典
         
     def add_child(self, child: 'HtmlElement') -> bool:
         """添加子元素"""
@@ -73,3 +74,12 @@ class HtmlElement:
                 return result
                 
         return None
+        
+    # 添加属性管理方法
+    def get_attribute(self, name: str) -> Optional[str]:
+        """获取属性值"""
+        return self.attributes.get(name)
+        
+    def set_attribute(self, name: str, value: str) -> None:
+        """设置属性值"""
+        self.attributes[name] = value

@@ -27,9 +27,9 @@ class ReadCommand(Command):
             # 2. 保存当前状态用于撤销
             self._save_current_state()
             
-            # 3. 使用解析器读取和解析文件
+            # 3. 使用解析器读取和解析文件 - 修正方法名
             parser = HtmlParser()
-            root = parser.load_html_file(self.file_path)
+            root = parser.parse_file(self.file_path)
             
             # 4. 更新模型
             self.model.replace_content(root)

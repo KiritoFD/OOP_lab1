@@ -3,7 +3,7 @@ import os
 from src.core.html_model import HtmlModel
 from src.commands.io_commands import ReadCommand
 from src.commands.base import CommandProcessor
-from src.commands.edit_commands import AppendCommand
+from src.commands.edit import AppendCommand
 
 class TestReadCommand:
     @pytest.fixture

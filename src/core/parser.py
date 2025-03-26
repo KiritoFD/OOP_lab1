@@ -1,95 +1,116 @@
-from typing import Optional
-from .html_model import HtmlModel
-from .element import HtmlElement
+import os
 import re
+import chardet
+from bs4 import BeautifulSoup
+from ..core.element import HtmlElement
+from ..core.exceptions import InvalidOperationError
+from typing import Optional
+import inspect
 
 class HtmlParser:
-    """HTML解析器，用于将HTML字符串解析成HtmlModel"""
+    """HTML解析器，用于从文件或字符串解析HTML"""
     
-    def parse(self, html_string: str) -> HtmlModel:
-        """
-        将HTML字符串解析为HtmlModel对象
+    def parse_file(self, file_path):
+        """从文件解析HTML"""
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"文件 '{file_path}' 不存在")
         
-        Args:
-            html_string: 要解析的HTML字符串
+        # 读取文件内容
+        with open(file_path, 'rb') as f:
+            raw_content = f.read()
             
-        Returns:
-            解析后的HtmlModel对象
-        """
-        model = HtmlModel()
+        if not raw_content.strip():
+            raise InvalidOperationError("HTML文件内容为空")
         
-        # 清空默认创建的结构，我们会从解析的内容重新构建
-        model.root = None
-        model._id_map = {}
-        
-        # 解析HTML并构建模型
-        root = self._parse_element(html_string)
-        if root:
-            model.root = root
-            # 重建ID映射
-            self._build_id_map(model, root)
+        # 检测编码
+        try:
+            encoding_info = chardet.detect(raw_content)
+            encoding = encoding_info['encoding'] if encoding_info['confidence'] > 0.7 else 'utf-8'
             
-        return model
+            # 使用检测到的编码解码文本
+            content = raw_content.decode(encoding)
+        except UnicodeDecodeError:
+            # 如果检测失败，尝试常见编码
+            for enc in ['utf-8', 'gb2312', 'gbk', 'iso-8859-1']:
+                try:
+                    content = raw_content.decode(enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            else:
+                # 如果所有尝试都失败
+                content = raw_content.decode('utf-8', errors='replace')
+            
+        return self.parse_string(content)
     
-    def _parse_element(self, html_string: str) -> Optional[HtmlElement]:
-        """解析HTML字符串为元素树"""
-        html_string = html_string.strip()
-        if not html_string:
-            return None
+    def parse_string(self, html_content):
+        """从字符串解析HTML"""
+        if not html_content or not html_content.strip():
+            raise InvalidOperationError("HTML内容为空")
             
-        # 简单的解析，仅支持带有id属性的基本标签
-        # 注意：这是一个简化的实现，不支持完整的HTML解析
-        tag_pattern = r'<(\w+)(?:\s+id="([^"]*)")?[^>]*>(.*?)</\1>'
-        match = re.search(tag_pattern, html_string, re.DOTALL)
+        # 使用BeautifulSoup解析HTML
+        soup = BeautifulSoup(html_content, 'html.parser')
+        html_tag = soup.find('html')
         
-        if not match:
-            return None
+        # 如果没有找到html标签，则创建一个默认结构
+        if not html_tag:
+            return self._create_default_structure()
             
-        tag_name = match.group(1)
-        id_value = match.group(2) or tag_name  # 如果没有id，使用标签名作为id
-        content = match.group(3).strip()
+        # 解析HTML树
+        return self._parse_element(html_tag)
+    
+    def _create_default_structure(self):
+        """创建默认HTML结构"""
+        html = HtmlElement('html', 'html')
+        head = HtmlElement('head', 'head')
+        body = HtmlElement('body', 'body')
         
-        element = HtmlElement(tag_name, id_value)
+        html.add_child(head)
+        html.add_child(body)
         
-        # 处理内容（文本和子元素）
-        # 这里我们假设子元素都是以 < 开头的标签
-        text_parts = []
-        remaining_content = content
+        return html
+    
+    def _parse_element(self, bs_tag, id_counter=None):
+        """解析BS4标签为HtmlElement"""
+        if id_counter is None:
+            id_counter = {'counter': 0}
+            
+        # 获取标签名
+        tag_name = bs_tag.name
         
-        # 查找所有子标签
-        child_pattern = r'<(\w+)(?:\s+id="([^"]*)")?[^>]*>.*?</\1>'
-        while remaining_content:
-            child_match = re.search(child_pattern, remaining_content, re.DOTALL)
-            if not child_match:
-                # 没有更多子标签，剩余内容作为文本
-                if remaining_content.strip():
-                    text_parts.append(remaining_content.strip())
-                break
+        # 获取或生成ID
+        tag_id = bs_tag.get('id')
+        if not tag_id:
+            tag_id = f"auto-{tag_name}-{id_counter['counter']}"
+            id_counter['counter'] += 1
+            
+        # 创建元素
+        element = HtmlElement(tag_name, tag_id)
+        
+        # 设置属性 - 使用新的属性处理方法
+        for attr_name, attr_value in bs_tag.attrs.items():
+            if attr_name != 'id':  # ID已经单独处理
+                if isinstance(attr_value, list):
+                    # 处理多值属性如class
+                    attr_value = ' '.join(attr_value)
                 
-            # 添加标签前的文本（如果有）
-            prefix = remaining_content[:child_match.start()].strip()
-            if prefix:
-                text_parts.append(prefix)
+                # 使用我们添加的set_attribute方法
+                element.attributes[attr_name] = attr_value
                 
-            # 解析子元素
-            child_html = remaining_content[child_match.start():child_match.end()]
-            child_element = self._parse_element(child_html)
-            if child_element:
+        # 处理文本内容
+        # 获取元素的直接文本内容，不包括子元素的文本
+        contents = list(bs_tag.children)
+        text_nodes = [node for node in contents if isinstance(node, str)]
+        if text_nodes:
+            # 合并所有直接文本节点
+            combined_text = ''.join(text.strip() for text in text_nodes if text.strip())
+            if combined_text:
+                element.text = combined_text
+            
+        # 处理子元素
+        for child in bs_tag.children:
+            if hasattr(child, 'name') and child.name:  # 只处理标签节点，忽略文本节点
+                child_element = self._parse_element(child, id_counter)
                 element.add_child(child_element)
                 
-            # 更新剩余内容
-            remaining_content = remaining_content[child_match.end():].strip()
-        
-        # 设置元素文本（合并所有文本部分）
-        if text_parts:
-            element.text = ' '.join(text_parts)
-            
         return element
-    
-    def _build_id_map(self, model: HtmlModel, element: HtmlElement) -> None:
-        """递归构建ID映射"""
-        if element.id:
-            model._id_map[element.id] = element
-            
-        for child in element.children:
-            self._build_id_map(model, child)

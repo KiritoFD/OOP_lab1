@@ -41,17 +41,17 @@ class CommandProcessor:
         Returns:
             执行成功返回True，否则返回False
         """
-        if not command:
+        # 先检查命令是否可以执行
+        if hasattr(command, 'can_execute') and not command.can_execute():
             return False
             
+        # 执行命令
         result = command.execute()
-        
-        if result and command.recordable:
-            self.history.append(command)
-            # 执行新命令后，清空重做列表
-            self.redos.clear()
-            # 通知观察者命令已执行
-            self._notify_observers('execute', command=command)
+        if result:
+            # 只有可记录的命令才添加到历史
+            if getattr(command, 'recordable', True):
+                self.history.append(command)
+                self.redos.clear()  # 清除重做历史
             
         return result
         
@@ -103,15 +103,9 @@ class CommandProcessor:
             return False
             
     def clear_history(self):
-        """清空历史和重做列表"""
-        history_copy = self.history.copy()
-        redos_copy = self.redos.copy()
-        
+        """清空命令历史"""
         self.history.clear()
         self.redos.clear()
-        
-        # 通知观察者历史已清空
-        self._notify_observers('clear', previous_history=history_copy, previous_redos=redos_copy)
         
     def add_observer(self, observer: CommandObserver):
         """添加观察者
