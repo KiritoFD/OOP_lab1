@@ -1,77 +1,92 @@
-from ..base import Command
-from ...core.html_model import HtmlModel
-from ...core.exceptions import ElementNotFoundError, DuplicateIdError
+from src.commands.base import Command
+from src.core.exceptions import ElementNotFoundError, IdCollisionError, InvalidOperationError
 
 class EditIdCommand(Command):
-    """编辑元素ID"""
-    def __init__(self, model: HtmlModel, old_id: str, new_id: str):
-        super().__init__()
-        self.model = model
-        self.old_id = old_id
+    """编辑HTML元素ID的命令"""
+    
+    def __init__(self, model, element_id, new_id):
+        super().__init__()  # Don't pass model to the base class constructor
+        self.model = model  # Store model as an instance variable instead
+        self.element_id = element_id
         self.new_id = new_id
-        self.element = None
-
-    def _validate_params(self) -> None:
-        """验证参数有效性"""
-        if not self.old_id or not isinstance(self.old_id, str):
-            raise ValueError("原ID不能为空且必须是字符串")
+        self.old_id = element_id
+        self.description = f"编辑ID: '{element_id}' -> '{new_id}'"
+        
+    def execute(self):
+        """执行编辑ID命令"""
+        # 检查是否为空ID
+        if not self.new_id:
+            raise InvalidOperationError("新ID不能为空")
             
-        if not self.new_id or not isinstance(self.new_id, str):
-            raise ValueError("新ID不能为空且必须是字符串")
-            
-        # 查找要编辑的元素
-        self.element = self.model.find_by_id(self.old_id)
-        if not self.element:
-            raise ElementNotFoundError(f"未找到ID为 '{self.old_id}' 的元素")
-            
-        # 检查新ID是否已存在
-        if self.model.find_by_id(self.new_id):
-            raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
-
-    def execute(self) -> bool:
-        """执行ID编辑命令"""
-        try:
-            # 验证参数
-            self._validate_params()
-            
-            # 从ID映射中移除旧ID
-            del self.model._id_map[self.old_id]
-            
-            # 更新元素ID
-            self.element.id = self.new_id
-            
-            # 注册新ID
-            self.model._id_map[self.new_id] = self.element
-            
+        # 如果新旧ID相同，无需操作
+        if self.element_id == self.new_id:
             return True
             
-        except Exception as e:
-            # 发生错误时恢复原状态
-            if self.element:
-                if self.new_id in self.model._id_map:
-                    del self.model._id_map[self.new_id]
-                self.element.id = self.old_id
-                self.model._id_map[self.old_id] = self.element
-            raise
-            
-    def undo(self) -> bool:
-        """撤销ID编辑命令"""
+        # 检查旧元素是否存在
+        element = self.model.find_by_id(self.element_id)
+        # 此处不需要再检查element是否存在，因为find_by_id会抛出异常
+        
+        # 确保新ID不会与现有ID冲突
         try:
-            # 确保有需要撤销的状态
-            if not self.element:
-                return False
-                
-            # 从ID映射中移除新ID
-            del self.model._id_map[self.new_id]
+            existing = self.model.find_by_id(self.new_id)
+            if existing:
+                raise IdCollisionError(self.new_id)
+        except ElementNotFoundError:
+            # 新ID不存在，可以安全使用
+            pass
             
-            # 恢复原ID
-            self.element.id = self.old_id
-            
-            # 重新注册原ID
-            self.model._id_map[self.old_id] = self.element
-            
-            return True
-            
-        except Exception as e:
-            print(f"撤销ID编辑命令时发生错误: {str(e)}")
+        # 更新元素ID
+        element.id = self.new_id
+        # 更新模型中的ID索引
+        self.model.update_element_id(self.element_id, self.new_id)
+        
+        return True
+        
+    def can_execute(self):
+        """检查命令是否可以执行"""
+        # 检查新ID是否为空
+        if not self.new_id:
             return False
+            
+        # 如果新旧ID相同，无需操作，但视为可执行
+        if self.element_id == self.new_id:
+            return True
+            
+        try:
+            # 检查旧元素是否存在
+            self.model.find_by_id(self.element_id)
+            
+            # 检查新ID是否已存在
+            try:
+                self.model.find_by_id(self.new_id)
+                # 如果找到了同名元素，说明会有ID冲突
+                return False
+            except ElementNotFoundError:
+                # 新ID不存在，可以安全使用
+                return True
+                
+        except ElementNotFoundError:
+            return False
+        except Exception:
+            return False
+        
+    def undo(self):
+        """撤销编辑ID命令"""
+        try:
+            # 找到元素（现在使用新ID）
+            element = self.model.find_by_id(self.new_id)
+            
+            # 恢复回原始ID
+            element.id = self.old_id
+            
+            # 更新模型中的ID索引
+            self.model.update_element_id(self.new_id, self.old_id)
+            
+            return True
+        except ElementNotFoundError:
+            # 如果元素已被删除，则无法撤销
+            return False
+    
+    def __str__(self):
+        """命令的字符串表示"""
+        return f"EditIdCommand('{self.element_id}' -> '{self.new_id}')"

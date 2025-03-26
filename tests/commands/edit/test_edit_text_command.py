@@ -124,3 +124,68 @@ class TestEditTextCommand:
         # 验证特殊字符文本已正确设置
         element = model.find_by_id('test-p')
         assert element.text == special_text
+
+    def test_edit_text_with_html_content(self, model, processor, setup_elements):
+        """测试编辑包含HTML标签的文本内容"""
+        html_content = '<strong>加粗文本</strong> 和 <em>斜体文本</em>'
+        cmd = EditTextCommand(model, 'test-p', html_content)
+        
+        # 执行编辑命令
+        assert processor.execute(cmd) is True
+        
+        # 验证文本已正确设置(应该保存为纯文本而非解析HTML)
+        element = model.find_by_id('test-p')
+        assert element.text == html_content
+    
+    def test_edit_nested_elements(self, model, processor, setup_elements):
+        """测试编辑带有嵌套元素的情况"""
+        # 创建嵌套结构
+        cmd_nest = AppendCommand(model, 'span', 'nested-span', 'test-p', '嵌套文本')
+        processor.execute(cmd_nest)
+        
+        # 编辑父元素的文本
+        cmd_edit = EditTextCommand(model, 'test-p', '父元素的新文本')
+        processor.execute(cmd_edit)
+        
+        # 验证父元素文本已更新，嵌套元素保持不变
+        parent = model.find_by_id('test-p')
+        nested = model.find_by_id('nested-span')
+        
+        assert parent.text == '父元素的新文本'
+        assert nested.text == '嵌套文本'
+    
+    def test_command_description(self, model, setup_elements):
+        """测试命令的描述属性"""
+        cmd = EditTextCommand(model, 'test-p', '新文本')
+        assert "编辑元素" in cmd.description
+        assert "test-p" in cmd.description
+    
+    def test_can_execute(self, model, setup_elements):
+        """测试can_execute方法的功能"""
+        # 有效元素ID
+        cmd = EditTextCommand(model, 'test-p', '新文本')
+        assert cmd.can_execute() is True
+        
+        # 无效元素ID
+        cmd_invalid = EditTextCommand(model, 'non-existent', '新文本')
+        assert cmd_invalid.can_execute() is False
+    
+    def test_command_str_representation(self, model, setup_elements):
+        """测试命令的字符串表示"""
+        cmd = EditTextCommand(model, 'test-p', '新文本')
+        str_repr = str(cmd)
+        
+        assert 'EditTextCommand' in str_repr
+        assert 'test-p' in str_repr
+    
+    def test_long_text_content(self, model, processor, setup_elements):
+        """测试非常长的文本内容"""
+        long_text = "超长文本" * 1000  # 创建一个较长的文本
+        cmd = EditTextCommand(model, 'test-p', long_text)
+        
+        # 执行编辑命令
+        assert processor.execute(cmd) is True
+        
+        # 验证长文本已正确设置
+        element = model.find_by_id('test-p')
+        assert element.text == long_text

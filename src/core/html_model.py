@@ -1,6 +1,6 @@
 from typing import Optional, Dict
 from .element import HtmlElement
-from .exceptions import DuplicateIdError, ElementNotFoundError
+from .exceptions import DuplicateIdError, ElementNotFoundError, IdCollisionError
 
 class HtmlModel:
     """HTML文档模型"""
@@ -20,9 +20,20 @@ class HtmlModel:
             'body': body
         }
         
-    def find_by_id(self, id: str) -> Optional[HtmlElement]:
-        """通过ID查找元素"""
-        return self._id_map.get(id)
+    def find_by_id(self, id: str) -> HtmlElement:
+        """
+        通过ID查找元素
+        
+        Returns:
+            找到的元素
+            
+        Raises:
+            ElementNotFoundError: 当元素不存在时抛出
+        """
+        element = self._id_map.get(id)
+        if element is None:
+            raise ElementNotFoundError(f"未找到ID为 '{id}' 的元素")
+        return element
         
     def _register_id(self, element: HtmlElement) -> None:
         """注册元素ID到映射表"""
@@ -142,3 +153,34 @@ class HtmlModel:
         # 重新注册所有ID
         self._register_id(self.root)
         self._register_subtree_ids(self.root)
+
+    def update_element_id(self, old_id, new_id):
+        """
+        更新元素ID，同时更新索引
+        
+        Args:
+            old_id: 旧ID
+            new_id: 新ID
+        
+        Returns:
+            None
+        
+        Raises:
+            ElementNotFoundError: 如果旧ID不存在
+            IdCollisionError: 如果新ID已存在 
+        """
+        if old_id == new_id:
+            return
+        
+        # 检查旧ID是否存在 - 修正属性名称 _elements_by_id -> _id_map
+        if old_id not in self._id_map:
+            raise ElementNotFoundError(f"元素 '{old_id}' 不存在")
+        
+        # 检查新ID是否已存在
+        if new_id in self._id_map:
+            raise IdCollisionError(new_id)
+        
+        # 获取元素并更新索引
+        element = self._id_map[old_id]
+        self._id_map[new_id] = element
+        del self._id_map[old_id]
