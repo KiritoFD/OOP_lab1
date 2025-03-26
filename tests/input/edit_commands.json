@@ -1,0 +1,37 @@
+[
+  {
+    "command": "insert",
+    "tag": "p",
+    "id": "newp1",
+    "location": "header",
+    "text": "在标题前插入的新段落"
+  },
+  {
+    "command": "append",
+    "tag": "div",
+    "id": "content",
+    "parent_id": "container",
+    "text": "新内容区域"
+  },
+  {
+    "command": "append",
+    "tag": "span",
+    "id": "highlight",
+    "parent_id": "p1",
+    "text": "高亮文本"
+  },
+  {
+    "command": "delete",
+    "element_id": "item2"
+  },
+  {
+    "command": "edit_text",
+    "element_id": "item1",
+    "new_text": "修改后的列表项 1"
+  },
+  {
+    "command": "edit_id",
+    "old_id": "item3",
+    "new_id": "lastItem"
+  }
+]
