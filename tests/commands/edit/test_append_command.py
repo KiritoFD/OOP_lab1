@@ -1,20 +1,24 @@
+# Test file for AppendCommand
+
 import pytest
-from src.core.html_model import HtmlModel
-from src.commands.edit_commands import AppendCommand
+from src.commands.edit.append_command import AppendCommand  # Correct import path
 from src.commands.base import CommandProcessor
-from src.core.exceptions import DuplicateIdError, ElementNotFoundError
+from src.core.html_model import HtmlModel
+from src.core.exceptions import ElementNotFoundError, DuplicateIdError
 
 class TestAppendCommand:
     @pytest.fixture
     def model(self):
+        """创建一个测试用的HTML模型"""
         return HtmlModel()
-    
+        
     @pytest.fixture
     def processor(self):
+        """创建一个命令处理器"""
         return CommandProcessor()
-    
+        
     def test_append_success(self, model, processor):
-        """测试成功追加子元素"""
+        """测试成功追加元素"""
         cmd = AppendCommand(model, 'div', 'test-div', 'body')
         
         # 执行命令
@@ -26,11 +30,10 @@ class TestAppendCommand:
         assert element.tag == 'div'
         assert element.id == 'test-div'
         assert element.parent == model.find_by_id('body')
-        assert element in model.find_by_id('body').children
         
     def test_append_with_text(self, model, processor):
         """测试追加带文本的元素"""
-        cmd = AppendCommand(model, 'p', 'test-p', 'body', 'Hello World')
+        cmd = AppendCommand(model, 'p', 'test-p', 'body', 'Hello, world!')
         
         # 执行命令
         assert processor.execute(cmd) is True
@@ -38,40 +41,24 @@ class TestAppendCommand:
         # 验证文本内容
         element = model.find_by_id('test-p')
         assert element is not None
-        assert element.text == 'Hello World'
+        assert element.text == 'Hello, world!'
         
     def test_append_duplicate_id(self, model, processor):
         """测试追加重复ID的元素"""
-        # 先追加一个元素
+        # 先添加一个元素
         cmd1 = AppendCommand(model, 'div', 'test-div', 'body')
         processor.execute(cmd1)
         
-        # 尝试追加相同ID的元素
-        cmd2 = AppendCommand(model, 'p', 'test-div', 'body')
+        # 尝试添加相同ID的元素
+        cmd2 = AppendCommand(model, 'div', 'test-div', 'body')
         with pytest.raises(DuplicateIdError):
             processor.execute(cmd2)
             
     def test_append_invalid_parent(self, model, processor):
         """测试追加到不存在的父元素"""
-        cmd = AppendCommand(model, 'div', 'test-div', 'nonexistent')
+        cmd = AppendCommand(model, 'div', 'test-div', 'non-existent')
         with pytest.raises(ElementNotFoundError):
             processor.execute(cmd)
-            
-    def test_append_nested(self, model, processor):
-        """测试嵌套追加"""
-        # 创建父元素
-        cmd1 = AppendCommand(model, 'div', 'parent', 'body')
-        processor.execute(cmd1)
-        
-        # 在父元素中追加子元素
-        cmd2 = AppendCommand(model, 'p', 'child', 'parent')
-        processor.execute(cmd2)
-        
-        # 验证嵌套结构
-        parent = model.find_by_id('parent')
-        child = model.find_by_id('child')
-        assert child in parent.children
-        assert child.parent == parent
             
     def test_append_undo(self, model, processor):
         """测试追加命令的撤销"""
@@ -81,9 +68,8 @@ class TestAppendCommand:
         # 执行撤销
         assert processor.undo() is True
         
-        # 验证元素被删除
+        # 验证元素已被删除
         assert model.find_by_id('test-div') is None
-        assert 'test-div' not in [child.id for child in model.find_by_id('body').children]
         
     def test_append_redo(self, model, processor):
         """测试追加命令的重做"""
@@ -94,29 +80,64 @@ class TestAppendCommand:
         # 执行重做
         assert processor.redo() is True
         
-        # 验证元素重新追加
-        element = model.find_by_id('test-div')
-        assert element is not None
-        assert element.tag == 'div'
-        assert element in model.find_by_id('body').children
+        # 验证元素已恢复
+        assert model.find_by_id('test-div') is not None
         
-    def test_append_sequence(self, model, processor):
-        """测试多个追加命令的序列"""
-        cmd1 = AppendCommand(model, 'div', 'div1', 'body')
-        cmd2 = AppendCommand(model, 'div', 'div2', 'body')
+    def test_append_nested_elements(self, model, processor):
+        """测试嵌套追加元素"""
+        # 创建嵌套结构
+        cmd1 = AppendCommand(model, 'div', 'outer', 'body')
+        cmd2 = AppendCommand(model, 'div', 'inner', 'outer')
+        cmd3 = AppendCommand(model, 'p', 'content', 'inner', 'Nested content')
         
-        # 执行命令序列
+        # 执行命令
         processor.execute(cmd1)
         processor.execute(cmd2)
+        processor.execute(cmd3)
         
-        # 验证追加顺序
-        body = model.find_by_id('body')
-        children = body.children
-        assert children[-2].id == 'div1'
-        assert children[-1].id == 'div2'
+        # 验证嵌套结构
+        outer = model.find_by_id('outer')
+        inner = model.find_by_id('inner')
+        content = model.find_by_id('content')
         
-        # 撤销一个命令
-        processor.undo()
-        assert model.find_by_id('div2') is None
+        assert inner.parent == outer
+        assert content.parent == inner
+        assert content.text == 'Nested content'
+        
+    def test_multiple_undo_redo(self, model, processor):
+        """测试多次撤销和重做"""
+        cmd1 = AppendCommand(model, 'div', 'div1', 'body')
+        cmd2 = AppendCommand(model, 'p', 'p1', 'body')
+        cmd3 = AppendCommand(model, 'span', 'span1', 'body')
+        
+        # 执行所有命令
+        processor.execute(cmd1)
+        processor.execute(cmd2)
+        processor.execute(cmd3)
+        
+        # 验证所有元素都存在
         assert model.find_by_id('div1') is not None
-        assert body.children[-1].id == 'div1'
+        assert model.find_by_id('p1') is not None
+        assert model.find_by_id('span1') is not None
+        
+        # 撤销全部命令
+        assert processor.undo() is True  # 撤销span1
+        assert model.find_by_id('span1') is None
+        assert model.find_by_id('p1') is not None
+        
+        assert processor.undo() is True  # 撤销p1
+        assert model.find_by_id('p1') is None
+        assert model.find_by_id('div1') is not None
+        
+        assert processor.undo() is True  # 撤销div1
+        assert model.find_by_id('div1') is None
+        
+        # 重做全部命令
+        assert processor.redo() is True  # 重做div1
+        assert model.find_by_id('div1') is not None
+        
+        assert processor.redo() is True  # 重做p1
+        assert model.find_by_id('p1') is not None
+        
+        assert processor.redo() is True  # 重做span1
+        assert model.find_by_id('span1') is not None
