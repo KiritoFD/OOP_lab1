@@ -85,6 +85,7 @@ class SaveCommand(Command):
         self.file_path = file_path
         self.description = f"保存文件: {file_path}"
         self.processor = None  # Will be set by CommandProcessor
+        self.recordable = False  # Make sure SaveCommand is not recorded
         
     def execute(self):
         """执行保存HTML文件命令"""
@@ -105,11 +106,9 @@ class SaveCommand(Command):
                 f.write(html_content)
             
             # 清空命令历史
-            # 确保我们可以访问命令处理器
-            from src.commands.base import CommandProcessor
-            processor = getattr(self, 'processor', None)
-            if isinstance(processor, CommandProcessor):
-                processor.clear_history()
+            if self.processor is not None:
+                self.processor.history.clear()
+                self.processor.redos.clear()
                 
             return True
         except Exception as e:

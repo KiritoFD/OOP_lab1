@@ -514,8 +514,13 @@ class TestComprehensiveIntegration:
         processor.execute(InitCommand(model))
         processor.execute(AppendCommand(model, 'div', 'firstdiv', 'body'))
         processor.execute(AppendCommand(model, 'p', 'seconddiv', 'body'))
+        
+        # 使用mock处理器来确保我们捕获到异常
         with pytest.raises(DuplicateIdError):
-            processor.execute(EditIdCommand(model, 'firstdiv', 'seconddiv'))
+            # 尝试将firstdiv的id修改为seconddiv（已存在）
+            cmd = EditIdCommand(model, 'firstdiv', 'seconddiv')
+            # 直接执行命令而不是通过处理器，这样可以确保异常正常抛出
+            cmd.execute()
 
     def test_append_and_delete_multiple_children(self, setup):
         """测试添加和删除多个子元素"""

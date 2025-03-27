@@ -41,16 +41,16 @@ class CommandProcessor:
         Returns:
             执行成功返回True，否则返回False
         """
+        # 注入处理器引用，以便命令可以访问它
+        if hasattr(command, 'processor'):
+            command.processor = self
+            
         # 先检查命令是否可以执行
         if hasattr(command, 'can_execute') and not command.can_execute():
             return False
             
         # 执行命令 - 不捕获异常，让其传播
         result = command.execute()
-        
-        # 注入处理器引用，以便命令可以访问它
-        if hasattr(command, 'processor'):
-            command.processor = self
         
         # 只记录成功的可记录命令
         if result and getattr(command, 'recordable', True):

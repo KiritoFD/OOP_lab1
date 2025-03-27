@@ -28,6 +28,17 @@ class HtmlWriter:
             return False
     
     @staticmethod
+    def write_file(model: HtmlModel, filepath: str) -> None:
+        """将HTML模型写入文件"""
+        # HTML头部
+        doctype = '<!DOCTYPE html>\n'
+        content = doctype + HtmlWriter._serialize_element(model.root)
+        
+        # 写入文件
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(content)
+    
+    @staticmethod
     def serialize(model: HtmlModel) -> str:
         """
         将HTML模型序列化为文本
@@ -63,13 +74,11 @@ class HtmlWriter:
         
         # 添加ID属性
         if element.id and element.id != element.tag:
-            result += f" id=\"{element.id}\""
+            result += f' id="{element.id}"'
             
-        # 添加其他属性 - 确保完全保留特殊字符
+        # 添加其他属性，不要转义，保持原样
         for attr_name, attr_value in element.attributes.items():
-            # 使用html.escape确保所有HTML特殊字符被正确转义
-            escaped_value = html.escape(attr_value, quote=True)
-            result += f" {attr_name}=\"{escaped_value}\""
+            result += f' {attr_name}="{attr_value}"'
             
         result += ">"
         

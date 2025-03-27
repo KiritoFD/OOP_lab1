@@ -22,18 +22,15 @@ class EditIdCommand(Command):
         if self.element_id == self.new_id:
             return True
         
-        # 先验证element_id是否存在
-        try:
-            element = self.model.find_by_id(self.element_id)
-        except ElementNotFoundError:
-            # 直接重新抛出异常，不捕获
-            raise
-            
-        # 先检查新ID是否与现有ID冲突
+        # 先验证element_id是否存在 - 直接尝试查找，让异常向上传播
+        element = self.model.find_by_id(self.element_id)
+        
+        # 检查新ID是否与现有ID冲突
         if self.new_id in self.model._id_map:
             raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
             
         # 更新元素ID
+        self.original_id = element.id
         element.id = self.new_id
         # 更新模型中的ID索引
         self.model.update_element_id(self.element_id, self.new_id)
