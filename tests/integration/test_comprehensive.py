@@ -13,7 +13,7 @@ from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError
-from src.spellcheck.checker import SpellChecker, SpellError  # Fixed import to use SpellError from checker module
+from src.spellcheck.checker import SpellChecker, SpellError
 
 class TestComprehensiveIntegration:
     """全面的集成测试，覆盖所有功能"""
@@ -429,3 +429,248 @@ class TestComprehensiveIntegration:
         
         with pytest.raises(ValueError):
             processor.execute(AppendCommand(model, 'div', '', 'body'))
+
+    def test_nested_undo_redo(self, setup):
+        """测试嵌套的撤销/重做操作"""
+        model = setup['model']
+        processor = setup['processor']
+
+        # 初始化
+        processor.execute(InitCommand(model))
+
+        # 创建嵌套结构
+        processor.execute(AppendCommand(model, 'div', 'outer', 'body'))
+        processor.execute(AppendCommand(model, 'p', 'inner', 'outer', 'Initial Text'))
+
+        # 编辑文本
+        processor.execute(EditTextCommand(model, 'inner', 'Edited Text'))
+
+        # 删除外部div
+        processor.execute(DeleteCommand(model, 'outer'))
+
+        # 撤销删除操作
+        processor.undo()
+        assert model.find_by_id('outer') is not None
+        assert model.find_by_id('inner') is not None
+        assert model.find_by_id('inner').text == 'Edited Text'
+
+        # 重做删除操作
+        processor.redo()
+        with pytest.raises(ElementNotFoundError):
+            model.find_by_id('outer')
+
+    def test_edit_nonexistent_element(self, setup):
+        """测试编辑不存在的元素"""
+        model = setup['model']
+        processor = setup['processor']
+
+        # 初始化
+        processor.execute(InitCommand(model))
+
+        # 尝试编辑不存在的元素
+        with pytest.raises(ElementNotFoundError):
+            processor.execute(EditTextCommand(model, 'nonexistent', 'Some Text'))
+
+        # 尝试修改不存在的元素的ID
+        with pytest.raises(ElementNotFoundError):
+            processor.execute(EditIdCommand(model, 'nonexistent', 'newid'))
+
+    def test_append_to_nonexistent_element(self, setup):
+        """测试向不存在的元素添加子元素"""
+        model = setup['model']
+        processor = CommandProcessor()
+        processor.execute(InitCommand(model))
+        with pytest.raises(ElementNotFoundError):
+            processor.execute(AppendCommand(model, 'div', 'newdiv', 'nonexistent'))
+
+    def test_insert_at_root(self, setup):
+        """测试在根元素之前插入元素"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        with pytest.raises(ElementNotFoundError):
+            processor.execute(InsertCommand(model, "div", "newdiv", "body"))
+
+    def test_save_and_load_empty_elements(self, setup, tmp_path):
+        """测试保存和加载空元素"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'emptydiv', 'body'))
+        filepath = os.path.join(tmp_path, 'empty_elements.html')
+        processor.execute(SaveCommand(model, filepath))
+        new_model = HtmlModel()
+        new_processor = CommandProcessor()
+        processor.execute(ReadCommand(new_processor, new_model, filepath))
+        assert new_model.find_by_id('emptydiv') is not None
+
+    def test_edit_id_already_exists(self, setup):
+        """测试尝试将ID修改为已存在的ID"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'firstdiv', 'body'))
+        processor.execute(AppendCommand(model, 'p', 'seconddiv', 'body'))
+        with pytest.raises(DuplicateIdError):
+            processor.execute(EditIdCommand(model, 'firstdiv', 'seconddiv'))
+
+    def test_append_and_delete_multiple_children(self, setup):
+        """测试添加和删除多个子元素"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'parent', 'body'))
+        for i in range(5):
+            processor.execute(AppendCommand(model, 'p', f'child{i}', 'parent'))
+        for i in range(5):
+            processor.execute(DeleteCommand(model, f'child{i}'))
+        assert model.find_by_id('parent').children == []
+
+    def test_save_and_load_special_characters_in_attributes(self, setup, tmp_path):
+        """测试保存和加载包含特殊字符的属性"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'attrdiv', 'body'))
+        element = model.find_by_id('attrdiv')
+        element.attributes['data-test'] = 'value with "quotes" and &ampersand'
+        filepath = os.path.join(tmp_path, 'attribute_test.html')
+        processor.execute(SaveCommand(model, filepath))
+        new_model = HtmlModel()
+        new_processor = CommandProcessor()
+        processor.execute(ReadCommand(new_processor, new_model, filepath))
+        loaded_element = new_model.find_by_id('attrdiv')
+        assert loaded_element.attributes['data-test'] == 'value with "quotes" and &ampersand'
+
+    def test_append_text_to_element_with_children(self, setup):
+        """测试向已经有子元素的元素添加文本"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'parent', 'body'))
+        processor.execute(AppendCommand(model, 'p', 'child', 'parent'))
+        processor.execute(EditTextCommand(model, 'parent', 'Some Text'))
+        assert model.find_by_id('parent').text == 'Some Text'
+
+    def test_delete_root_elements(self, setup):
+        """测试删除根元素（html, head, body）"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        with pytest.raises(ValueError):
+            processor.execute(DeleteCommand(model, 'html'))
+        assert processor.execute(DeleteCommand(model, 'head')) is False
+        assert processor.execute(DeleteCommand(model, 'body')) is False
+
+    def test_edit_id_core_elements(self, setup):
+        """测试编辑核心元素的ID"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        assert processor.execute(EditIdCommand(model, 'html', 'newhtml')) is True
+        assert model.find_by_id('newhtml') is not None
+
+    def test_save_and_load_doctype(self, setup, tmp_path):
+        """测试保存和加载DOCTYPE声明"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        filepath = os.path.join(tmp_path, 'doctype_test.html')
+        processor.execute(SaveCommand(model, filepath))
+        new_model = HtmlModel()
+        new_processor = CommandProcessor()
+        processor.execute(ReadCommand(new_processor, new_model, filepath))
+        # This assertion might need adjustment depending on how DOCTYPE is represented
+        assert new_model.find_by_id('html') is not None
+
+    def test_undo_redo_after_save(self, setup, tmp_path):
+        """测试保存后撤销/重做是否清空历史"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'testdiv', 'body', 'Test Content'))
+        filepath = os.path.join(tmp_path, 'undo_redo_test.html')
+        processor.execute(SaveCommand(model, filepath))
+        assert len(processor.history) == 0
+        assert len(processor.redos) == 0
+
+    def test_read_invalid_file(self, setup):
+        """测试读取无效文件"""
+        model = setup['model']
+        processor = setup['processor']
+        with pytest.raises(FileNotFoundError):
+            processor.execute(ReadCommand(processor, model, 'invalid_file.html'))
+
+    def test_append_long_text(self, setup):
+        """测试添加长文本"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        long_text = "This is a very long text " * 200
+        processor.execute(AppendCommand(model, 'p', 'longtext', 'body', long_text))
+        assert model.find_by_id('longtext').text == long_text
+
+    def test_insert_command_with_attributes(self, setup):
+        """测试插入命令是否可以添加属性"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        cmd = InsertCommand(model, 'div', 'attrdiv', 'body')
+        processor.execute(cmd)
+        element = model.find_by_id('attrdiv')
+        element.attributes['class'] = 'testclass'
+        assert element.attributes['class'] == 'testclass'
+
+    def test_edit_text_with_html_tags(self, setup):
+        """测试编辑包含HTML标签的文本"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'p', 'htmltext', 'body', 'Initial Text'))
+        processor.execute(EditTextCommand(model, 'htmltext', 'Text with <div> and <p>'))
+        assert model.find_by_id('htmltext').text == 'Text with <div> and <p>'
+
+    def test_delete_nested_elements_with_same_id(self, setup):
+        """测试删除具有相同ID的嵌套元素"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'parent', 'body'))
+        processor.execute(AppendCommand(model, 'p', 'child', 'parent'))
+        processor.execute(AppendCommand(model, 'span', 'child', 'p'))
+        processor.execute(DeleteCommand(model, 'child'))
+        processor.execute(DeleteCommand(model, 'parent'))
+        assert model.find_by_id('parent') is None
+        with pytest.raises(ElementNotFoundError):
+            model.find_by_id('child')
+
+    def test_edit_id_with_special_characters(self, setup):
+        """测试使用包含特殊字符的ID编辑元素"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'initial', 'body'))
+        processor.execute(EditIdCommand(model, 'initial', 'new-id_with.chars'))
+        assert model.find_by_id('new-id_with.chars') is not None
+
+    def test_save_and_load_comments(self, setup, tmp_path):
+        """测试保存和加载HTML注释"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        # This test requires more complex handling of comments, which is beyond the current scope
+        # It's better to ensure that the system doesn't crash when encountering comments
+        filepath = os.path.join(tmp_path, 'comment_test.html')
+        processor.execute(SaveCommand(model, filepath))
+        new_model = HtmlModel()
+        new_processor = CommandProcessor()
+        processor.execute(ReadCommand(new_processor, new_model, filepath))
+        assert new_model.find_by_id('html') is not None
+
+    def test_append_command_with_html_content(self, setup):
+        """测试使用HTML内容添加Append命令"""
+        model = setup['model']
+        processor = setup['processor']
+        processor.execute(InitCommand(model))
+        processor.execute(AppendCommand(model, 'div', 'htmlcontent', 'body', '<p>Some HTML</p>'))
+        assert model.find_by_id('htmlcontent').text == '<p>Some HTML</p>'

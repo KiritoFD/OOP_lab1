@@ -14,8 +14,11 @@ class HtmlParser:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"文件不存在: {file_path}")
             
-        # 读取文件内容
-        content = self._read_file_with_encoding(file_path)
+        try:
+            # 读取文件内容
+            content = self._read_file_with_encoding(file_path)
+        except FileNotFoundError:
+            raise
         
         # 解析HTML内容
         return self.parse_string(content)
