@@ -577,11 +577,16 @@ class TestComprehensiveIntegration:
         processor.execute(InitCommand(model))
         processor.execute(AppendCommand(model, 'div', 'firstdiv', 'body'))
         processor.execute(AppendCommand(model, 'p', 'seconddiv', 'body'))
+    
+        print("\n=== 调试信息 ===")
+        print("当前存在的ID:", model._id_map.keys())
+        print("尝试修改 firstdiv -> seconddiv")
 
         with pytest.raises(CommandExecutionError) as exc_info:
             cmd = EditIdCommand(model, 'firstdiv', 'seconddiv')
+            print("命令对象创建完成")
             processor.execute(cmd)
-        print(f"EditIdCommand exception cause: {exc_info.value.__cause__}")
+        print("捕获到的异常:", type(exc_info.value), "原因:", type(exc_info.value.__cause__))
         assert isinstance(exc_info.value.__cause__, DuplicateIdError)
     
     def test_append_and_delete_multiple_children(self, setup):

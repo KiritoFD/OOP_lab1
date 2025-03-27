@@ -121,9 +121,11 @@ class SaveCommand(Command):
         result = f"{indent}<{element.tag}"
         
         # 添加ID和其他属性
-        result += f' id="{escape_html_attribute(element.id)}"'
+        result += f' id="{element.id}"' if element.id else ''
         for attr_name, attr_value in element.attributes.items():
-            result += f' {attr_name}="{escape_html_attribute(attr_value)}"'
+            # 只转义双引号，不转义 & 符号
+            attr_value = attr_value.replace('"', '&quot;')
+            result += f' {attr_name}="{attr_value}"'
             
         if not element.children and not element.text:
             # 无内容的自闭合标签

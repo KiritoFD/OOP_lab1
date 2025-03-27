@@ -25,46 +25,43 @@ class EditIdCommand(Command):
             raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
 
     def can_execute(self):
-        """检查命令是否可以执行"""
+        """检查命令是否可以执行（仅基本校验）"""
         try:
-            self._validate_params()
+            # 只检查非空和自身相等的情况
+            if not self.new_id:
+                return False
+            if self.element_id == self.new_id:
+                return False
             return True
-        except (InvalidOperationError, DuplicateIdError):
+        except Exception:
             return False
 
     def execute(self):
         """执行编辑ID命令"""
         try:
-            # 检查是否为空ID
-            if not self.new_id:
-                raise InvalidOperationError("新ID不能为空")
-                
-            # 如果新旧ID相同，无需操作
-            if self.element_id == self.new_id:
-                return True
+            print(f"开始执行ID修改：{self.element_id} -> {self.new_id}")
+            # 完整参数验证
+            self._validate_params()
+            print("参数验证通过")
             
-            # 查找元素 - 如果不存在会抛出ElementNotFoundError
+            # 查找元素
+            print(f"正在查找元素：{self.element_id}")
             element = self.model.find_by_id(self.element_id)
-            
-            # 检查新ID是否与现有ID冲突
-            if self.new_id in self.model._id_map:
-                raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
+            print(f"找到元素：{element}")
                 
             # 更新元素ID
+            print(f"更新ID前检查：新ID '{self.new_id}' 是否存在？{self.new_id in self.model._id_map}")
             self.original_id = element.id
             element.id = self.new_id
-            
-            # 更新模型中的ID索引
+            print(f"执行模型ID映射更新：{self.element_id} -> {self.new_id}")
             self.model.update_element_id(self.element_id, self.new_id)
             
             return True
-        except ElementNotFoundError as e:
-            # 明确捕获ElementNotFoundError并重新抛出
-            raise CommandExecutionError(f"元素 '{self.element_id}' 不存在") from e
-        except DuplicateIdError as e:
-            # 明确捕获DuplicateIdError并重新抛出
-            raise CommandExecutionError(f"ID冲突: {e}") from e
+        except (ElementNotFoundError, DuplicateIdError, InvalidOperationError) as e:
+            print(f"捕获到预期异常：{type(e).__name__} - {str(e)}")
+            raise CommandExecutionError(str(e)) from e
         except Exception as e:
+            print(f"捕获到未预期异常：{type(e).__name__} - {str(e)}")
             raise CommandExecutionError(f"执行编辑ID命令时出错: {str(e)}") from e
 
     def undo(self):
