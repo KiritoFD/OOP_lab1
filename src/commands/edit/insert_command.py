@@ -15,6 +15,7 @@ class InsertCommand(Command):
         self.inserted_element = None
         self.parent = None
         self.next_sibling = None
+        self.description = f"在{location}前插入{tag_name}元素(id={id_value})"
         self._executed = False  # Track if command has been executed
         
     def _validate_params(self) -> None:
@@ -28,9 +29,13 @@ class InsertCommand(Command):
         if not self.location or not isinstance(self.location, str):
             raise ValueError("插入位置不能为空且必须是字符串")
             
-        # 检查ID是否已存在
-        if self.model.find_by_id(self.id_value):
+        # 检查ID是否已存在 - 使用内部字典直接检查，而不是find_by_id方法
+        if self.id_value in self.model._id_map:
             raise DuplicateIdError(f"ID '{self.id_value}' 已存在")
+
+        # 检查目标位置是否存在 - 使用安全的方式检查
+        if self.location not in self.model._id_map:
+            raise ElementNotFoundError(f"未找到ID为 '{self.location}' 的元素")
 
     def execute(self) -> bool:
         """执行插入命令"""
@@ -47,48 +52,19 @@ class InsertCommand(Command):
             if self.text:
                 self.inserted_element.text = self.text
                 
-            # 查找目标位置
-            target = self.model.find_by_id(self.location)
-            if not target:
-                raise ElementNotFoundError(f"未找到ID为 '{self.location}' 的元素")
+            # 查找目标位置 - 这里是安全的，因为我们已经在_validate_params中验证了
+            target = self.model._id_map.get(self.location)
             
-            # 将新元素ID注册到模型中
-            self.model._register_id(self.inserted_element)
-                
-            if self.location == 'body':
-                # 在这种情况下，我们需要将元素添加为HTML根元素的子元素（与body同级）
-                html = self.model.root
-                body = None
-                for child in html.children:
-                    if child.id == 'body':
-                        body = child
-                        break
-                
-                if not body:
-                    raise ElementNotFoundError("无法找到body元素")
-                
-                # 将新元素添加为html的子元素（与body同级）
-                self.parent = html
-                html.add_child(self.inserted_element)
-                self.inserted_element.parent = html
-                print(f"Inserted element '{self.id_value}' as sibling of 'body'")
-            elif target.id == 'outer' and self.id_value == 'inner':
-                # 特殊处理嵌套元素的情况 - 添加为outer的子元素
-                self.parent = target
+            # 确保我们有一个有效的父元素
+            if not target.parent:
+                # 特殊情况：如果目标是根元素，我们不能在它前面插入
+                print(f"无法在根元素前插入，尝试作为其子元素添加")
                 target.add_child(self.inserted_element)
                 self.inserted_element.parent = target
-                print(f"Inserted '{self.id_value}' as child of '{target.id}'")
-            elif self.id_value == 'content' and self.location == 'inner':
-                # 特殊处理嵌套的content元素 - 添加为inner的子元素
                 self.parent = target
-                target.add_child(self.inserted_element)
-                self.inserted_element.parent = target
-                print(f"Inserted '{self.id_value}' as child of '{target.id}'")
+                self.next_sibling = None
             else:
-                # 处理普通情况: 在目标元素前插入
-                if not target.parent:
-                    raise ElementNotFoundError(f"元素 '{self.location}' 没有父元素，无法在其前面插入")
-                
+                # 正常情况：在目标元素前插入
                 self.parent = target.parent
                 self.next_sibling = target
                 
@@ -97,19 +73,20 @@ class InsertCommand(Command):
                 # 在该索引处插入新元素
                 target.parent.children.insert(index, self.inserted_element)
                 self.inserted_element.parent = target.parent
-                print(f"Inserted '{self.id_value}' before '{target.id}' in parent '{self.parent.id}'")
             
+            # 注册ID到模型
+            self.model._register_id(self.inserted_element)
+            
+            print(f"成功在'{self.location}'前插入'{self.id_value}'元素")
             self._executed = True
             return True
 
-        except (ValueError, DuplicateIdError, ElementNotFoundError) as e:
-            # 重置状态
-            self.inserted_element = None
-            self.parent = None
-            self.next_sibling = None
-            self._executed = False
-            # 向上传播异常
-            raise
+        except (ValueError, DuplicateIdError) as e:
+            print(f"执行插入命令失败: {e}")
+            return False
+        except ElementNotFoundError as e:
+            print(f"执行插入命令失败: {e}")
+            return False
         except Exception as e:
             # 处理其他未预期的异常
             print(f"插入元素时发生错误: {str(e)}")
@@ -130,11 +107,11 @@ class InsertCommand(Command):
             # 从父元素中删除已插入的元素
             if self.parent and self.inserted_element in self.parent.children:
                 self.parent.children.remove(self.inserted_element)
-                print(f"Successfully removed '{self.inserted_element.id}' from '{self.parent.id}'")
+                print(f"成功撤销插入'{self.id_value}'元素")
                 self._executed = False
                 return True
             
-            print(f"Failed to undo: element '{self.inserted_element.id}' not found in parent's children")
+            print(f"撤销失败: 在父元素的子元素列表中找不到'{self.inserted_element.id}'")
             return False
             
         except Exception as e:
