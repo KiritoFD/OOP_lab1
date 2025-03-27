@@ -36,63 +36,50 @@ class InsertCommand(Command):
         # 检查目标位置是否存在 - 使用安全的方式检查
         if self.location not in self.model._id_map:
             raise ElementNotFoundError(f"未找到ID为 '{self.location}' 的元素")
+            
+        # 根元素不能用于插入
+        if self.location == 'body':
+            raise ElementNotFoundError("不能在根元素之前插入元素")
 
     def execute(self) -> bool:
         """执行插入命令"""
-        try:
-            # Don't re-execute if already executed
-            if self._executed:
-                return True
-                
-            # 验证参数
-            self._validate_params()
-            
-            # 创建新元素
-            self.inserted_element = HtmlElement(self.tag_name, self.id_value)
-            if self.text:
-                self.inserted_element.text = self.text
-                
-            # 查找目标位置 - 这里是安全的，因为我们已经在_validate_params中验证了
-            target = self.model._id_map.get(self.location)
-            
-            # 确保我们有一个有效的父元素
-            if not target.parent:
-                # 特殊情况：如果目标是根元素，我们不能在它前面插入
-                print(f"无法在根元素前插入，尝试作为其子元素添加")
-                target.add_child(self.inserted_element)
-                self.inserted_element.parent = target
-                self.parent = target
-                self.next_sibling = None
-            else:
-                # 正常情况：在目标元素前插入
-                self.parent = target.parent
-                self.next_sibling = target
-                
-                # 在父元素的children列表中找出目标元素的索引
-                index = target.parent.children.index(target)
-                # 在该索引处插入新元素
-                target.parent.children.insert(index, self.inserted_element)
-                self.inserted_element.parent = target.parent
-            
-            # 注册ID到模型
-            self.model._register_id(self.inserted_element)
-            
-            print(f"成功在'{self.location}'前插入'{self.id_value}'元素")
-            self._executed = True
+        # Don't re-execute if already executed
+        if self._executed:
             return True
-
-        except (ValueError, DuplicateIdError) as e:
-            print(f"执行插入命令失败: {e}")
-            return False
-        except ElementNotFoundError as e:
-            print(f"执行插入命令失败: {e}")
-            return False
-        except Exception as e:
-            # 处理其他未预期的异常
-            print(f"插入元素时发生错误: {str(e)}")
-            self._executed = False
-            return False
             
+        # 验证参数 - 这里我们直接让异常向上传播，而不是捕获它们
+        self._validate_params()
+        
+        # 创建新元素
+        self.inserted_element = HtmlElement(self.tag_name, self.id_value)
+        if self.text:
+            self.inserted_element.text = self.text
+            
+        # 查找目标位置
+        target = self.model._id_map.get(self.location)
+        
+        # 确保我们有一个有效的父元素
+        if not target.parent:
+            # 特殊情况：如果目标是根元素，我们不能在它前面插入
+            raise ElementNotFoundError("不能在根元素之前插入元素")
+        
+        # 正常情况：在目标元素前插入
+        self.parent = target.parent
+        self.next_sibling = target
+        
+        # 在父元素的children列表中找出目标元素的索引
+        index = target.parent.children.index(target)
+        # 在该索引处插入新元素
+        target.parent.children.insert(index, self.inserted_element)
+        self.inserted_element.parent = target.parent
+        
+        # 注册ID到模型
+        self.model._register_id(self.inserted_element)
+        
+        print(f"成功在'{self.location}'前插入'{self.id_value}'元素")
+        self._executed = True
+        return True
+    
     def undo(self) -> bool:
         """撤销插入命令"""
         try:

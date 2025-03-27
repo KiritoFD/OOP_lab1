@@ -1,6 +1,7 @@
 # HTML写入器
 from ..core.html_model import HtmlModel
 from ..core.element import HtmlElement
+import html
 
 class HtmlWriter:
     """HTML写入器，将HTML模型序列化为文本"""
@@ -63,6 +64,12 @@ class HtmlWriter:
         # 添加ID属性
         if element.id and element.id != element.tag:
             result += f" id=\"{element.id}\""
+            
+        # 添加其他属性 - 确保完全保留特殊字符
+        for attr_name, attr_value in element.attributes.items():
+            # 使用html.escape确保所有HTML特殊字符被正确转义
+            escaped_value = html.escape(attr_value, quote=True)
+            result += f" {attr_name}=\"{escaped_value}\""
             
         result += ">"
         

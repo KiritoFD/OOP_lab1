@@ -48,6 +48,10 @@ class CommandProcessor:
         # 执行命令 - 不捕获异常，让其传播
         result = command.execute()
         
+        # 注入处理器引用，以便命令可以访问它
+        if hasattr(command, 'processor'):
+            command.processor = self
+        
         # 只记录成功的可记录命令
         if result and getattr(command, 'recordable', True):
             self.history.append(command)
@@ -104,8 +108,8 @@ class CommandProcessor:
             
     def clear_history(self):
         """清空命令历史"""
-        self.history.clear()
-        self.redos.clear()
+        self.history = []
+        self.redos = []
         
     def add_observer(self, observer: CommandObserver):
         """添加观察者

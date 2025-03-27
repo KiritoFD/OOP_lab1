@@ -1,5 +1,5 @@
 from src.commands.base import Command
-from src.core.exceptions import ElementNotFoundError, IdCollisionError, InvalidOperationError
+from src.core.exceptions import ElementNotFoundError, IdCollisionError, InvalidOperationError, DuplicateIdError
 
 class EditIdCommand(Command):
     """编辑HTML元素ID的命令"""
@@ -21,19 +21,17 @@ class EditIdCommand(Command):
         # 如果新旧ID相同，无需操作
         if self.element_id == self.new_id:
             return True
-            
-        # 检查旧元素是否存在
-        element = self.model.find_by_id(self.element_id)
-        # 此处不需要再检查element是否存在，因为find_by_id会抛出异常
         
-        # 确保新ID不会与现有ID冲突
+        # 先验证element_id是否存在
         try:
-            existing = self.model.find_by_id(self.new_id)
-            if existing:
-                raise IdCollisionError(self.new_id)
+            element = self.model.find_by_id(self.element_id)
         except ElementNotFoundError:
-            # 新ID不存在，可以安全使用
-            pass
+            # 直接重新抛出异常，不捕获
+            raise
+            
+        # 先检查新ID是否与现有ID冲突
+        if self.new_id in self.model._id_map:
+            raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
             
         # 更新元素ID
         element.id = self.new_id
