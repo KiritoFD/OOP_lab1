@@ -1,26 +1,37 @@
-class HtmlError(Exception):
-    """HTML操作基础异常类"""
+class HTMLEditorError(Exception):
+    """Base class for exceptions in the HTML editor."""
     pass
 
-class DuplicateIdError(HtmlError):
-    """重复ID异常"""
+class ElementNotFoundError(HTMLEditorError):
+    """Raised when an element is not found."""
     pass
 
-class ElementNotFoundError(HtmlError):
-    """元素未找到异常"""
+class DuplicateIdError(HTMLEditorError):
+    """Raised when an ID is duplicated."""
     pass
 
-class InvalidOperationError(HtmlError):
-    """无效操作异常"""
+class IdCollisionError(HTMLEditorError):
+    """Raised when an ID collision occurs."""
     pass
 
-class IdCollisionError(Exception):
-    """当尝试使用已经存在的ID时抛出此异常"""
-    
-    def __init__(self, element_id):
-        self.element_id = element_id
-        message = f"ID '{element_id}' 已经存在，无法重复使用"
-        super().__init__(message)
+class InvalidOperationError(HTMLEditorError):
+    """Raised when an operation is invalid."""
+    pass
+
 class InvalidCommandError(Exception):
     """当命令无效时抛出此异常"""
     pass
+
+class CommandException(HTMLEditorError):
+    """命令相关异常的基类"""
+    pass
+
+class CommandExecutionError(CommandException):
+    """命令执行失败时抛出的异常"""
+    def __init__(self, message="命令执行失败"):
+        super().__init__(message)
+
+class CommandParameterError(CommandException):
+    """命令参数无效时抛出的异常"""
+    def __init__(self, message="无效的命令参数"):
+        super().__init__(message)

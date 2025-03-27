@@ -1,6 +1,7 @@
 from ..base import Command
 from ...core.html_model import HtmlModel
-from ...core.exceptions import ElementNotFoundError
+from ...core.exceptions import ElementNotFoundError,DuplicateIdError
+from src.commands.command_exceptions import CommandExecutionError
 
 class EditTextCommand(Command):
     """编辑HTML元素的文本内容"""
@@ -12,20 +13,30 @@ class EditTextCommand(Command):
         self.new_text = text
         self.old_text = None
         self.description = f"编辑文本: '{element_id}'"
-        
+    
     def execute(self):
         """执行编辑文本命令"""
-        # 查找元素 - 让异常直接传播
-        element = self.model.find_by_id(self.element_id)
+        try:
+            # 查找元素 - 如果不存在会抛出ElementNotFoundError
+            element = self.model.find_by_id(self.element_id)
+                
+            # 保存原始文本用于撤销
+            self.old_text = element.text
             
-        # 保存原始文本用于撤销
-        self.old_text = element.text
+            # 设置新文本
+            element.text = self.new_text
+            
+            return True
+        except ElementNotFoundError as e:
+            # 明确捕获ElementNotFoundError并重新抛出
+            raise CommandExecutionError(f"元素 '{self.element_id}' 不存在") from e
+        except Exception as e:
+            raise CommandExecutionError(f"执行编辑文本命令时出错: {e}") from e
         
-        # 设置新文本
-        element.text = self.new_text
-        
-        return True
-        
+    def _validate_params(self):
+        if self.new_id and self.new_id in self.model._id_map:
+            raise DuplicateIdError(f"ID '{self.new_id}' 已存在")
+
     def undo(self):
         """撤销编辑文本命令"""
         try:

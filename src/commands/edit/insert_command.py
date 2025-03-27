@@ -1,7 +1,8 @@
 from ..base import Command
 from ...core.html_model import HtmlModel
 from ...core.element import HtmlElement
-from ...core.exceptions import DuplicateIdError, ElementNotFoundError
+from ...core.exceptions import DuplicateIdError, ElementNotFoundError, InvalidOperationError
+from src.commands.command_exceptions import CommandExecutionError, CommandParameterError
 
 class InsertCommand(Command):
     """在指定位置前插入元素"""
@@ -18,6 +19,7 @@ class InsertCommand(Command):
         self.description = f"在{location}前插入{tag_name}元素(id={id_value})"
         self._executed = False  # Track if command has been executed
         
+    
     def _validate_params(self) -> None:
         """验证参数有效性"""
         if not self.tag_name or not isinstance(self.tag_name, str):
@@ -39,47 +41,56 @@ class InsertCommand(Command):
             
         # 根元素不能用于插入
         if self.location == 'body':
-            raise ElementNotFoundError("不能在根元素之前插入元素")
+            raise InvalidOperationError("不能在根元素之前插入元素")
+    
+        # 修改根元素检查逻辑
+        if self.location in ['html', 'head', 'body']:
+            raise InvalidOperationError("不能在根元素之前插入元素")
 
     def execute(self) -> bool:
         """执行插入命令"""
-        # Don't re-execute if already executed
-        if self._executed:
+        try:
+            # Don't re-execute if already executed
+            if self._executed:
+                return True
+                
+            # 验证参数
+            self._validate_params()
+            
+            # 创建新元素
+            self.inserted_element = HtmlElement(self.tag_name, self.id_value)
+            if self.text:
+                self.inserted_element.text = self.text
+                
+            # 查找目标位置
+            target = self.model._id_map.get(self.location)
+            
+            # 确保我们有一个有效的父元素
+            if not target.parent:
+                # 特殊情况：如果目标是根元素，我们不能在它前面插入
+                raise InvalidOperationError("不能在根元素之前插入元素")
+            
+            # 正常情况：在目标元素前插入
+            self.parent = target.parent
+            self.next_sibling = target
+            
+            # 在父元素的children列表中找出目标元素的索引
+            index = target.parent.children.index(target)
+            # 在该索引处插入新元素
+            target.parent.children.insert(index, self.inserted_element)
+            self.inserted_element.parent = target.parent
+            
+            # 注册ID到模型
+            self.model._register_id(self.inserted_element)
+            
+            print(f"成功在'{self.location}'前插入'{self.id_value}'元素")
+            self._executed = True
             return True
-            
-        # 验证参数 - 这里我们直接让异常向上传播，而不是捕获它们
-        self._validate_params()
-        
-        # 创建新元素
-        self.inserted_element = HtmlElement(self.tag_name, self.id_value)
-        if self.text:
-            self.inserted_element.text = self.text
-            
-        # 查找目标位置
-        target = self.model._id_map.get(self.location)
-        
-        # 确保我们有一个有效的父元素
-        if not target.parent:
-            # 特殊情况：如果目标是根元素，我们不能在它前面插入
-            raise ElementNotFoundError("不能在根元素之前插入元素")
-        
-        # 正常情况：在目标元素前插入
-        self.parent = target.parent
-        self.next_sibling = target
-        
-        # 在父元素的children列表中找出目标元素的索引
-        index = target.parent.children.index(target)
-        # 在该索引处插入新元素
-        target.parent.children.insert(index, self.inserted_element)
-        self.inserted_element.parent = target.parent
-        
-        # 注册ID到模型
-        self.model._register_id(self.inserted_element)
-        
-        print(f"成功在'{self.location}'前插入'{self.id_value}'元素")
-        self._executed = True
-        return True
-    
+        except (ElementNotFoundError, DuplicateIdError, InvalidOperationError) as e:
+            raise CommandExecutionError(str(e)) from e
+        except Exception as e:
+            raise CommandExecutionError(f"执行插入命令时出错: {e}") from e
+
     def undo(self) -> bool:
         """撤销插入命令"""
         try:

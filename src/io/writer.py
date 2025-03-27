@@ -75,10 +75,11 @@ class HtmlWriter:
         # 添加ID属性
         if element.id and element.id != element.tag:
             result += f' id="{element.id}"'
-            
-        # 添加其他属性，不要转义，保持原样
+        
+        # 添加其他属性，确保特殊字符被正确处理
         for attr_name, attr_value in element.attributes.items():
-            result += f' {attr_name}="{attr_value}"'
+            escaped_value = html.escape(attr_value, quote=True)
+            result += f' {attr_name}="{escaped_value}"'
             
         result += ">"
         

@@ -2,8 +2,10 @@ import os
 from .base import Command
 from ..core.html_model import HtmlModel
 from ..io.parser import HtmlParser
-from ..core.exceptions import InvalidOperationError
+from ..core.exceptions import InvalidOperationError, ElementNotFoundError
 from copy import deepcopy
+from src.commands.command_exceptions import CommandExecutionError, CommandParameterError
+from src.utils.html_utils import escape_html_attribute, unescape_html
 
 class ReadCommand(Command):
     """读取HTML文件命令"""
@@ -34,15 +36,9 @@ class ReadCommand(Command):
             # 4. 更新模型
             self.model.replace_content(root)
             return True
-            
-        except FileNotFoundError:
-            # Let FileNotFoundError propagate up
-            raise
         except Exception as e:
-            # Handle other exceptions
-            print(f"读取文件命令执行失败: {e}")
-            return False
-    
+            raise CommandExecutionError(f"读取文件失败: {str(e)}") from e
+            
     def _save_current_state(self):
         """保存当前模型状态，用于撤销操作"""
         # 保存当前模型的根元素和ID映射
@@ -91,7 +87,7 @@ class SaveCommand(Command):
         """执行保存HTML文件命令"""
         try:
             html_content = self._generate_html()
-            
+                
             # 确保目录存在
             directory = os.path.dirname(self.file_path)
             if directory and not os.path.exists(directory):
@@ -109,11 +105,10 @@ class SaveCommand(Command):
             if self.processor is not None:
                 self.processor.history.clear()
                 self.processor.redos.clear()
-                
+                    
             return True
         except Exception as e:
-            print(f"保存HTML文件失败: {str(e)}")
-            return False
+            raise CommandExecutionError(f"保存文件失败: {str(e)}") from e
     
     def _generate_html(self):
         """生成HTML内容"""
@@ -126,9 +121,9 @@ class SaveCommand(Command):
         result = f"{indent}<{element.tag}"
         
         # 添加ID和其他属性
-        result += f' id="{element.id}"'
+        result += f' id="{escape_html_attribute(element.id)}"'
         for attr_name, attr_value in element.attributes.items():
-            result += f' {attr_name}="{attr_value}"'
+            result += f' {attr_name}="{escape_html_attribute(attr_value)}"'
             
         if not element.children and not element.text:
             # 无内容的自闭合标签
