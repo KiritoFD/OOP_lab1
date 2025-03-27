@@ -37,6 +37,11 @@ I/O命令:
   read <file_path>         - 从文件读取HTML
   save <file_path>         - 保存HTML到文件
 
+  示例:
+    > init                 # 创建新的HTML文档
+    > read examples/page.html    # 读取HTML文件
+    > save output/mypage.html    # 保存当前文档
+
 编辑命令:
   append <tag> <id> <parent_id> [text] - 在父元素内追加子元素
   insert <tag> <id> <location> [text]  - 在某元素之前插入元素
@@ -44,17 +49,42 @@ I/O命令:
   edit-text <element_id> [text]     - 编辑元素文本内容
   edit-id <old_id> <new_id>        - 修改元素ID
 
+  示例:
+    > append div container body       # 添加一个id为container的div作为body的子元素
+    > append p para1 container 这是第一段文本  # 添加带文本的段落
+    > insert h1 title container 网页标题    # 在container元素之前插入一个id为title的h1元素
+    > delete para1                    # 删除ID为para1的元素
+    > edit-text title 新的网页标题       # 修改文本内容
+    > edit-id container main-content  # 修改ID
+
 显示命令:
   print                    - 树形显示HTML结构
   spellcheck               - 检查文本拼写错误
+
+  示例:
+    > print                # 显示当前HTML结构
+    > spellcheck           # 检查所有文本内容的拼写错误
 
 历史命令:
   undo                     - 撤销上一个命令
   redo                     - 重做已撤销的命令
 
+  示例:
+    > undo                 # 撤销最近的操作
+    > redo                 # 重做刚才撤销的操作
+
 其他命令:
   help                     - 显示此帮助信息
   exit                     - 退出程序
+
+工作流示例:
+  > init                   # 初始化新文档
+  > append div main body   # 创建主要内容区
+  > append h1 title main 我的网页  # 添加标题
+  > append p intro main 这是简介   # 添加段落
+  > insert h2 subtitle main 子标题  # 在main元素前插入子标题
+  > print                  # 查看结构
+  > save mypage.html       # 保存文件
 """
         print(help_text)
         
@@ -68,6 +98,18 @@ I/O命令:
         while self.running:
             try:
                 command_line = input("> ")
+                
+                # 处理文件路径中的引号问题
+                # 如果是save或read命令且包含引号，确保路径被正确解析
+                parts = command_line.split(maxsplit=1)
+                if len(parts) >= 2 and parts[0].lower() in ['save', 'read']:
+                    cmd_name = parts[0].lower()
+                    file_path = parts[1].strip()
+                    # 移除引号，如果存在
+                    if (file_path.startswith('"') and file_path.endswith('"')) or \
+                       (file_path.startswith("'") and file_path.endswith("'")):
+                        file_path = file_path[1:-1]
+                    command_line = f"{cmd_name} {file_path}"
                 
                 if command_line.lower() == "exit":
                     self.running = False

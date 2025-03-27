@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set, Optional
 from dataclasses import dataclass
+import re
+import os
+import json
 
 @dataclass
 class SpellError:
@@ -25,142 +28,150 @@ class ISpellChecker(ABC):
         """
         pass
 
-class DefaultSpellChecker(ISpellChecker):
-    """默认的拼写检查器实现"""
+class SpellChecker:
+    """拼写检查器类"""
     
-    def __init__(self, dictionary_path: str = None):
+    def __init__(self, dictionary_path: str = None, language: str = 'en'):
         """初始化拼写检查器
         
         Args:
-            dictionary_path: 可选的字典文件路径
+            dictionary_path: 词典文件路径，如果为None则使用内置词典
+            language: 语言代码，默认为英语('en')
         """
-        self.dictionary = set()
-        # 加载内置字典
-        self._load_dictionary(dictionary_path)
+        self.words: Set[str] = set()
+        self.language = language
+        
+        # 加载词典
+        if dictionary_path and os.path.exists(dictionary_path):
+            self._load_dictionary(dictionary_path)
+        else:
+            self._load_default_dictionary()
+    
+    def _load_dictionary(self, path: str):
+        """从文件加载词典
+        
+        Args:
+            path: 词典文件路径
+        """
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    word = line.strip().lower()
+                    if word:
+                        self.words.add(word)
+        except Exception as e:
+            print(f"加载词典时出错: {str(e)}")
+            self._load_default_dictionary()
+    
+    def _load_default_dictionary(self):
+        """加载默认内置词典"""
+        # 简单的内置词典，实际应用中应使用更完整的词典
+        common_words = [
+            "the", "be", "to", "of", "and", "a", "in", "that", "have", "I", 
+            "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+            "this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
+            "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+            "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+            "text", "paragraph", "html", "title", "body", "head", "div", "span",
+            "page", "content", "website", "web", "design", "example", "test"
+        ]
+        self.words = set(common_words)
     
     def check_text(self, text: str) -> List[SpellError]:
-        """检查文本拼写错误"""
-        if not text or not isinstance(text, str):
+        """检查文本中的拼写错误
+        
+        Args:
+            text: 要检查的文本
+            
+        Returns:
+            拼写错误列表
+        """
+        if not text:
             return []
             
-        # 分割文本为单词
-        words = text.split()
         errors = []
-        current_pos = 0
+        # 使用正则表达式提取单词
+        words = re.findall(r'\b[a-zA-Z]+\b', text)
         
         for word in words:
-            # 跳过特殊情况
-            if self._is_special_case(word):
-                current_pos += len(word) + 1
-                continue
+            word_lower = word.lower()
+            if word_lower not in self.words and len(word) > 1:
+                # 找到单词在原文中的位置
+                start_pos = text.find(word)
+                end_pos = start_pos + len(word)
                 
-            # 检查拼写
-            clean_word = word.strip('.,;:!?()[]{}\'\"').lower()
-            if clean_word and len(clean_word) > 1 and clean_word not in self.dictionary:
-                # 获取建议（简单实现）
-                suggestions = self._get_suggestions(clean_word)
+                # 生成建议
+                suggestions = self._get_suggestions(word_lower)
                 
-                # 获取上下文（前后各一个词）
-                word_index = words.index(word)
-                context = self._get_context(words, word_index)
-                
-                # 创建错误对象
-                error = SpellError(
-                    wrong_word=word,
-                    suggestions=suggestions,
-                    context=context,
-                    start=current_pos,
-                    end=current_pos + len(word)
-                )
+                # 创建拼写错误对象
+                error = SpellError(word, suggestions, text, start_pos, end_pos)
                 errors.append(error)
-            
-            current_pos += len(word) + 1  # +1 for space
-            
-        return errors
-        
-    def _is_special_case(self, word: str) -> bool:
-        """检查是否为特殊情况（URL、邮箱、代码片段等）"""
-        # URL检查
-        if any(protocol in word.lower() for protocol in ['http://', 'https://', 'ftp://']):
-            return True
-            
-        # 邮箱检查
-        if '@' in word and '.' in word:
-            return True
-            
-        # 数字和日期检查
-        if any(char.isdigit() for char in word):
-            return True
-            
-        # 代码片段检查（包含特殊字符）
-        if any(char in word for char in '(){}[]<>\'";'):
-            return True
-            
-        return False
-        
-    def _get_context(self, words: List[str], index: int, context_size: int = 1) -> str:
-        """获取单词的上下文"""
-        start = max(0, index - context_size)
-        end = min(len(words), index + context_size + 1)
-        return ' '.join(words[start:end])
-        
-    def _load_dictionary(self, dictionary_path: str = None):
-        """加载字典文件"""
-        # 添加一些基本英文单词作为示例
-        self.dictionary = {
-            "a", "about", "all", "an", "and", "are", "as", "at", "be", "been", 
-            "but", "by", "can", "could", "did", "do", "does", "for", "from", 
-            "had", "has", "have", "he", "her", "him", "his", "how", "i", "if", 
-            "in", "is", "it", "its", "me", "my", "no", "not", "of", "on", "or", 
-            "our", "she", "so", "some", "the", "their", "them", "then", "there", 
-            "these", "they", "this", "to", "up", "us", "was", "we", "what", "when", 
-            "where", "which", "who", "will", "with", "would", "you", "your",
-            "paragraph", "correct", "spelling", "text", "example", "html", "body",
-            "head", "title", "div", "span", "content"
-        }
-        
-        # 如果提供了字典路径，尝试加载
-        if dictionary_path:
-            try:
-                with open(dictionary_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        word = line.strip().lower()
-                        if word:
-                            self.dictionary.add(word)
-            except Exception as e:
-                print(f"Warning: Failed to load dictionary from {dictionary_path}: {e}")
                 
+        return errors
+    
     def _get_suggestions(self, word: str) -> List[str]:
-        """获取拼写建议（简单实现）"""
-        # 这里只是一个简单实现，真实场景可能需要更复杂的算法
+        """为拼写错误的单词生成建议
+        
+        使用简单的编辑距离算法生成建议
+        
+        Args:
+            word: 错误的单词
+            
+        Returns:
+            建议的单词列表
+        """
+        # 简单实现，查找编辑距离为1的单词
         suggestions = []
+        for dict_word in self.words:
+            if self._edit_distance(word, dict_word) <= 1:
+                suggestions.append(dict_word)
         
-        # 一些常见拼写错误的映射
-        common_fixes = {
-            "teh": "the", 
-            "wrok": "work", 
-            "adn": "and",
-            "taht": "that", 
-            "wiht": "with", 
-            "thier": "their",
-            "recieve": "receive",
-            "seperate": "separate",
-            "occured": "occurred",
-            "goverment": "government",
-            "exampel": "example",
-            "exmple": "example",
-            "sampel": "sample",
-            "paragreph": "paragraph",
-            "speling": "spelling",
-            "sume": "some",
-            "misspeled": "misspelled"
-        }
+        # 如果没有找到建议，尝试编辑距离为2的单词
+        if not suggestions:
+            for dict_word in self.words:
+                if self._edit_distance(word, dict_word) <= 2:
+                    suggestions.append(dict_word)
         
-        # 检查常见错误映射
-        if word in common_fixes:
-            suggestions.append(common_fixes[word])
+        # 限制建议数量
+        return sorted(suggestions)[:5]
+    
+    def _edit_distance(self, s1: str, s2: str) -> int:
+        """计算两个单词之间的编辑距离(Levenshtein距离)
         
-        return suggestions
-
-# 为了保持向后兼容，提供一个别名
-SpellChecker = DefaultSpellChecker
+        Args:
+            s1: 第一个单词
+            s2: 第二个单词
+            
+        Returns:
+            两个单词之间的编辑距离
+        """
+        if len(s1) < len(s2):
+            return self._edit_distance(s2, s1)
+            
+        if len(s2) == 0:
+            return len(s1)
+        
+        previous_row = range(len(s2) + 1)
+        for i, c1 in enumerate(s1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(s2):
+                # 计算插入、删除和替换的代价
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                
+                # 选择最小代价
+                current_row.append(min(insertions, deletions, substitutions))
+            
+            previous_row = current_row
+            
+        return previous_row[-1]
+    
+    def add_to_dictionary(self, word: str):
+        """将单词添加到词典
+        
+        Args:
+            word: 要添加的单词
+        """
+        if word:
+            self.words.add(word.lower())
