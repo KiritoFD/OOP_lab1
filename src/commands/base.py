@@ -45,13 +45,13 @@ class CommandProcessor:
         if hasattr(command, 'can_execute') and not command.can_execute():
             return False
             
-        # 执行命令
+        # 执行命令 - 不捕获异常，让其传播
         result = command.execute()
-        if result:
-            # 只有可记录的命令才添加到历史
-            if getattr(command, 'recordable', True):
-                self.history.append(command)
-                self.redos.clear()  # 清除重做历史
+        
+        # 只记录成功的可记录命令
+        if result and getattr(command, 'recordable', True):
+            self.history.append(command)
+            self.redos.clear()
             
         return result
         

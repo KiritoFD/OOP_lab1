@@ -103,8 +103,8 @@ class TestReadInputFiles:
             
         # 创建读取命令
         cmd = ReadCommand(processor, model, nonexistent_path)
-        
-        # 验证执行会抛出异常
+        processor.execute(cmd)
+        # 执行命令并验证抛出异常
         with pytest.raises(FileNotFoundError):
             processor.execute(cmd)
             

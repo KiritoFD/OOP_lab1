@@ -21,3 +21,6 @@ class IdCollisionError(Exception):
         self.element_id = element_id
         message = f"ID '{element_id}' 已经存在，无法重复使用"
         super().__init__(message)
+class InvalidCommandError(Exception):
+    """当命令无效时抛出此异常"""
+    pass

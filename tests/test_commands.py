@@ -1,6 +1,6 @@
 import pytest
 from src.commands.base import CommandProcessor
-from src.commands.edit_commands import (
+from src.commands.edit import (
     InsertCommand,
     AppendCommand,
     DeleteCommand,

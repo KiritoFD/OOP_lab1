@@ -27,7 +27,7 @@ class ReadCommand(Command):
             # 2. 保存当前状态用于撤销
             self._save_current_state()
             
-            # 3. 使用解析器读取和解析文件
+            # 3. 使用解析器读取和解析文件 - FileNotFoundError will propagate
             parser = HtmlParser()
             root = parser.load_html_file(self.file_path)
             
@@ -35,7 +35,11 @@ class ReadCommand(Command):
             self.model.replace_content(root)
             return True
             
+        except FileNotFoundError:
+            # Let FileNotFoundError propagate up
+            raise
         except Exception as e:
+            # Handle other exceptions
             print(f"读取文件命令执行失败: {e}")
             return False
     
@@ -65,7 +69,8 @@ class ReadCommand(Command):
     
     def can_execute(self):
         """检查命令是否可以执行"""
-        return os.path.exists(self.file_path)
+        # Remove file existence check
+        return True
     
     def __str__(self):
         """返回命令的字符串表示"""
