@@ -184,20 +184,3 @@ class HtmlModel:
         element = self._id_map[old_id]
         self._id_map[new_id] = element
         del self._id_map[old_id]
-    
-    def clear(self):
-        """清空模型内容，恢复到初始状态"""
-        self._id_map.clear()
-        self.root = self._create_default_structure()
-        
-    def _create_default_structure(self):
-        """创建默认的HTML结构"""
-        html = HtmlElement('html', 'html')
-        head = HtmlElement('head', 'head')
-        body = HtmlElement('body', 'body')
-        
-        html.add_child(head)
-        html.add_child(body)
-        self._update_id_map(html)
-        
-        return html
