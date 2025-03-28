@@ -41,7 +41,7 @@ class SpellChecker:
         self.custom_dict = custom_dict or {}
         # 尝试导入拼写检查库，如果不可用则使用简单实现
         try:
-            from spellchecker import SpellChecker as PySpellChecker
+            from spellcheck import SpellChecker as PySpellChecker
             self.checker = PySpellChecker(language=language)
             self.has_library = True
         except ImportError:
