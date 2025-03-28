@@ -16,16 +16,22 @@ class EditTextCommand(Command):
     
     def execute(self):
         """执行编辑文本命令"""
-        # 查找元素 - 如果不存在会抛出ElementNotFoundError
-        element = self.model.find_by_id(self.element_id)
-        
-        # 保存原始文本用于撤销
-        self.old_text = element.text
-        
-        # 设置新文本
-        element.text = self.new_text
-        
-        return True
+        try:
+            # 查找元素 - 如果不存在会抛出ElementNotFoundError
+            element = self.model.find_by_id(self.element_id)
+            
+            # 保存原始文本用于撤销
+            self.old_text = element.text
+            
+            # 设置新文本
+            element.text = self.new_text
+            
+            return True
+        except ElementNotFoundError as e:
+            # 修改错误信息格式以匹配测试预期
+            raise CommandExecutionError(f"元素 '{self.element_id}' 不存在") from e
+        except Exception as e:
+            raise CommandExecutionError(f"执行编辑文本命令时出错: {e}") from e
 
     def _validate_params(self):
         if self.new_id and self.new_id in self.model._id_map:
