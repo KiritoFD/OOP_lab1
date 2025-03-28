@@ -147,15 +147,18 @@ class TestSpellCheck:
 
     def test_check_html_text(self, model, mock_checker):
         """测试检查HTML元素中的文本"""
-        # 修复这里的append_child调用，添加所有需要的参数
         # 遍历所有元素检查文本
         errors = []
         for element_id in ['p1', 'p2']:
-            element = model.find_by_id(element_id)
-            if element and element.text:
-                result = mock_checker.check_text(element.text)
-                if result:
-                    errors.extend(result)
+            try:
+                element = model.find_by_id(element_id)
+                if element and element.text:
+                    result = mock_checker.check_text(element.text)
+                    if result:
+                        errors.extend(result)
+            except ElementNotFoundError:
+                # 忽略找不到元素的情况
+                pass
         
         assert len(errors) == 2
         assert "correct" in errors[0].suggestions

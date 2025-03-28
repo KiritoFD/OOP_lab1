@@ -85,13 +85,29 @@ class TestInsertCommand:
         
         # 撤销操作
         processor.undo()  # 撤销cmd3
-        assert model.find_by_id('span1') is None
+        # 使用try/except检查span1是否已被删除
+        try:
+            model.find_by_id('span1')
+            assert False, "span1应该已被删除"
+        except ElementNotFoundError:
+            # 预期异常，元素已正确删除
+            pass
         
         processor.undo()  # 撤销cmd2
-        assert model.find_by_id('p1') is None
+        try:
+            model.find_by_id('p1')
+            assert False, "p1应该已被删除"
+        except ElementNotFoundError:
+            # 预期异常，元素已正确删除
+            pass
         
         processor.undo()  # 撤销cmd1
-        assert model.find_by_id('div1') is None
+        try:
+            model.find_by_id('div1')
+            assert False, "div1应该已被删除"
+        except ElementNotFoundError:
+            # 预期异常，元素已正确删除
+            pass
         
         # 重做操作
         processor.redo()  # 重做cmd1

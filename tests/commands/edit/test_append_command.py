@@ -4,7 +4,7 @@ import pytest
 from src.commands.edit.append_command import AppendCommand  # Correct import path
 from src.commands.base import CommandProcessor
 from src.core.html_model import HtmlModel
-from src.core.exceptions import ElementNotFoundError, DuplicateIdError
+from src.core.exceptions import ElementNotFoundError, DuplicateIdError, CommandExecutionError
 
 class TestAppendCommand:
     @pytest.fixture
@@ -51,14 +51,16 @@ class TestAppendCommand:
         
         # 尝试添加相同ID的元素
         cmd2 = AppendCommand(model, 'div', 'test-div', 'body')
-        with pytest.raises(DuplicateIdError):
+        with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd2)
+        assert "已存在" in str(excinfo.value)
             
     def test_append_invalid_parent(self, model, processor):
         """测试追加到不存在的父元素"""
         cmd = AppendCommand(model, 'div', 'test-div', 'non-existent')
-        with pytest.raises(ElementNotFoundError):
+        with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd)
+        assert "未找到" in str(excinfo.value)
             
     def test_append_undo(self, model, processor):
         """测试追加命令的撤销"""
@@ -69,7 +71,12 @@ class TestAppendCommand:
         assert processor.undo() is True
         
         # 验证元素已被删除
-        assert model.find_by_id('test-div') is None
+        try:
+            model.find_by_id('test-div')
+            assert False, "元素应被删除"
+        except ElementNotFoundError:
+            # 预期的异常
+            pass
         
     def test_append_redo(self, model, processor):
         """测试追加命令的重做"""

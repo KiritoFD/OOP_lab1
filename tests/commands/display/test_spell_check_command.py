@@ -208,7 +208,15 @@ class TestSpellCheckCommand:
         mock_checker = mock_checker_class.return_value
         mock_checker.check_text.side_effect = Exception("模拟拼写检查错误")
         
-        # 通过测试，无需验证异常了，因为命令可能已经处理了异常
+        # 捕获异常并检查输出
         cmd = SpellCheckCommand(model)
-        # 不再期待异常被抛出，而是被捕获并处理
-        processor.execute(cmd)
+        
+        try:
+            processor.execute(cmd)
+            # 检查是否有错误信息输出
+            captured = capsys.readouterr()
+            output = captured.out
+            assert ("错误" in output) or ("Error" in output)
+        except Exception as e:
+            # 如果测试环境不会捕获异常，也是可以接受的
+            assert "模拟拼写检查错误" in str(e)
