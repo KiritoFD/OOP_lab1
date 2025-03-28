@@ -101,11 +101,9 @@ class SaveCommand(Command):
             with open(self.file_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
             
-            # 清空命令历史
-            if self.processor is not None:
-                self.processor.history.clear()
-                self.processor.redos.clear()
-                    
+            # 不再清空命令历史，以便保留撤销/重做功能
+            # 仅标记当前状态为已保存
+                
             return True
         except Exception as e:
             raise CommandExecutionError(f"保存文件失败: {str(e)}") from e
