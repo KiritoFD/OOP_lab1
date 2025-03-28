@@ -1,0 +1,168 @@
+Date : 2025-03-28 16:32:27
+Directory : c:\Users\xy\Documents\GitHub\OOP_lab1
+Total : 108 files,  8182 codes, 1381 comments, 2454 blanks, all 12017 lines
+
+Languages
++------------------+------------+------------+------------+------------+------------+
+| language         | files      | code       | comment    | blank      | total      |
++------------------+------------+------------+------------+------------+------------+
+| Python           |         90 |      7,344 |      1,381 |      2,181 |     10,906 |
+| Markdown         |          7 |        666 |          0 |        263 |        929 |
+| HTML             |          8 |        118 |          0 |          7 |        125 |
+| JSON             |          1 |         37 |          0 |          1 |         38 |
+| Ini              |          1 |         13 |          0 |          2 |         15 |
+| pip requirements |          1 |          4 |          0 |          0 |          4 |
++------------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                     | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                        |        108 |      8,182 |      1,381 |      2,454 |     12,017 |
+| . (Files)                                                                                |          8 |      1,041 |        109 |        359 |      1,509 |
+| docs                                                                                     |          4 |        279 |          0 |        111 |        390 |
+| docs (Files)                                                                             |          2 |        142 |          0 |         60 |        202 |
+| docs\design                                                                              |          2 |        137 |          0 |         51 |        188 |
+| src                                                                                      |         39 |      2,254 |        330 |        629 |      3,213 |
+| src (Files)                                                                              |          3 |        376 |         40 |         96 |        512 |
+| src\application                                                                          |          2 |         96 |          6 |         22 |        124 |
+| src\commands                                                                             |         15 |        972 |        168 |        288 |      1,428 |
+| src\commands (Files)                                                                     |          9 |        676 |        121 |        207 |      1,004 |
+| src\commands\edit                                                                        |          6 |        296 |         47 |         81 |        424 |
+| src\core                                                                                 |          6 |        296 |         45 |         88 |        429 |
+| src\io                                                                                   |          3 |        165 |         35 |         55 |        255 |
+| src\spellcheck                                                                           |          6 |        250 |         21 |         56 |        327 |
+| src\spellcheck (Files)                                                                   |          4 |        236 |         13 |         52 |        301 |
+| src\spellcheck\adapters                                                                  |          2 |         14 |          8 |          4 |         26 |
+| src\state                                                                                |          2 |         69 |          3 |         17 |         89 |
+| src\utils                                                                                |          2 |         30 |         12 |          7 |         49 |
+| tests                                                                                    |         57 |      4,608 |        942 |      1,355 |      6,905 |
+| tests (Files)                                                                            |         14 |      1,648 |        352 |        493 |      2,493 |
+| tests\application                                                                        |          2 |          0 |          0 |          2 |          2 |
+| tests\commands                                                                           |         14 |        877 |        182 |        279 |      1,338 |
+| tests\commands (Files)                                                                   |          1 |          0 |          0 |          1 |          1 |
+| tests\commands\display                                                                   |          2 |        240 |         35 |         66 |        341 |
+| tests\commands\edit                                                                      |          8 |        637 |        147 |        209 |        993 |
+| tests\commands\file                                                                      |          1 |          0 |          0 |          1 |          1 |
+| tests\commands\io                                                                        |          2 |          0 |          0 |          2 |          2 |
+| tests\input                                                                              |         10 |        186 |          0 |         15 |        201 |
+| tests\integration                                                                        |          7 |        773 |        188 |        253 |      1,214 |
+| tests\io                                                                                 |          8 |        796 |        154 |        204 |      1,154 |
+| tests\spellcheck                                                                         |          1 |        214 |         38 |         74 |        326 |
+| tests\stress                                                                             |          1 |        114 |         28 |         35 |        177 |
++------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| filename                                                                                 | language         | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| c:\Users\xy\Documents\GitHub\OOP_lab1\architecture.md                                    | Markdown         |        142 |          0 |         59 |        201 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\conftest.py                                        | Python           |          3 |          1 |          1 |          5 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\docs\architecture.md                               | Markdown         |        142 |          0 |         59 |        201 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\docs\dependencies.md                               | Markdown         |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\docs\design\module_dependencies.md                 | Markdown         |         53 |          0 |         20 |         73 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\docs\design\spellcheck.md                          | Markdown         |         84 |          0 |         31 |        115 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\lab1.md                                            | Markdown         |        210 |          0 |         86 |        296 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\main.py                                            | Python           |        135 |         14 |         32 |        181 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\pytest.ini                                         | Ini              |         13 |          0 |          2 |         15 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\requirements.txt                                   | pip requirements |          4 |          0 |          0 |          4 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\__init__.py                                    | Python           |          3 |          2 |          1 |          6 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\application\__init__.py                        | Python           |          3 |          0 |          1 |          4 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\application\command_parser.py                  | Python           |         93 |          6 |         21 |        120 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\__init__.py                           | Python           |          0 |          1 |          1 |          2 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\base.py                               | Python           |         99 |         13 |         28 |        140 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\command_exceptions.py                 | Python           |         12 |          0 |          4 |         16 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\display_commands.py                   | Python           |        170 |         33 |         51 |        254 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\__init__.py                      | Python           |         12 |          0 |          1 |         13 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\append_command.py                | Python           |         54 |          9 |         17 |         80 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\delete_command.py                | Python           |         52 |          9 |         16 |         77 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\edit_id_command.py               | Python           |         63 |          8 |         15 |         86 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\edit_text_command.py             | Python           |         38 |          4 |          9 |         51 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\edit\insert_command.py                | Python           |         77 |         17 |         23 |        117 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\io_commands.py                        | Python           |        139 |         23 |         38 |        200 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\observer.py                           | Python           |         12 |          0 |          4 |         16 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\parser.py                             | Python           |         92 |         22 |         32 |        146 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\test_dir_tree_command.py              | Python           |        107 |         20 |         33 |        160 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\commands\writer.py                             | Python           |         45 |          9 |         16 |         70 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\__init__.py                               | Python           |          3 |          0 |          0 |          3 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\element.py                                | Python           |         61 |          7 |         17 |         85 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\exceptions.py                             | Python           |         29 |          0 |          8 |         37 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\html_model.py                             | Python           |        128 |         20 |         38 |        186 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\html_writer.py                            | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\core\parser.py                                 | Python           |         75 |         18 |         24 |        117 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\io\__init__.py                                 | Python           |          3 |          1 |          1 |          5 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\io\parser.py                                   | Python           |         89 |         22 |         32 |        143 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\io\writer.py                                   | Python           |         73 |         12 |         22 |        107 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\main.py                                        | Python           |        132 |          9 |         37 |        178 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\session_manager.py                             | Python           |        241 |         29 |         58 |        328 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\__init__.py                         | Python           |          0 |          2 |          1 |          3 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\adapters\__init__.py                | Python           |          3 |          0 |          0 |          3 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\adapters\language_tool.py           | Python           |         11 |          8 |          4 |         23 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\checker.py                          | Python           |        150 |         10 |         29 |        189 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\models.py                           | Python           |         32 |          0 |          9 |         41 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\spellcheck\reporters.py                        | Python           |         54 |          1 |         13 |         68 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\state\__init__.py                              | Python           |          0 |          1 |          1 |          2 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\state\session_state.py                         | Python           |         69 |          2 |         16 |         87 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\utils\html_utils.py                            | Python           |         15 |          1 |          3 |         19 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\src\utils\validator.py                             | Python           |         15 |         11 |          4 |         30 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\test.html                                          | HTML             |          4 |          0 |          1 |          5 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\test_comprehensive.py                              | Python           |        530 |         94 |        178 |        802 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\__init__.py                                  | Python           |          0 |          2 |          1 |          3 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\application\__init__.py                      | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\application\test_command_parser.py           | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\__init__.py                         | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\display\test_print_tree_command.py  | Python           |        138 |         20 |         37 |        195 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\display\test_spell_check_command.py | Python           |        102 |         15 |         29 |        146 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\__init__.py                    | Python           |          0 |          2 |          0 |          2 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\conftest.py                    | Python           |          9 |          1 |          2 |         12 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\delete_command.py              | Python           |         88 |         23 |         26 |        137 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\test_append_command.py         | Python           |         94 |         18 |         31 |        143 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\test_delete_command.py         | Python           |         78 |         19 |         27 |        124 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\test_edit_id_command.py        | Python           |        112 |         25 |         34 |        171 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\test_edit_text_command.py      | Python           |        118 |         30 |         43 |        191 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\edit\test_insert_command.py         | Python           |        138 |         29 |         46 |        213 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\file\test_read_command.py           | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\io\__init__.py                      | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\commands\io\test_save_command.py             | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\conftest.py                                  | Python           |         15 |          4 |          7 |         26 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\README.md                              | Markdown         |         35 |          0 |          7 |         42 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\__init__.py                            | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\deep_nested.html                       | HTML             |         18 |          0 |          1 |         19 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\edit_commands.json                     | JSON             |         37 |          0 |          1 |         38 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\expected_result.html                   | HTML             |         17 |          0 |          1 |         18 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\sample.html                            | HTML             |         17 |          0 |          0 |         17 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\sample_html.html                       | HTML             |         16 |          0 |          1 |         17 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\simple_tree.html                       | HTML             |         14 |          0 |          1 |         15 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\special_chars.html                     | HTML             |         10 |          0 |          1 |         11 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\input\spell_check.html                       | HTML             |         22 |          0 |          1 |         23 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\__init__.py                      | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_comprehensive.py            | Python           |        275 |         66 |         91 |        432 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_edge_cases.py               | Python           |        169 |         48 |         62 |        279 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_integration.py              | Python           |          0 |          0 |          1 |          1 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_malformed_html.py           | Python           |        102 |         19 |         27 |        148 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_performance.py              | Python           |        114 |         28 |         35 |        177 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\integration\test_real_world_scenarios.py     | Python           |        113 |         27 |         36 |        176 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\__init__.py                               | Python           |          0 |          2 |          1 |          3 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\parser.py                                 | Python           |         79 |         19 |         23 |        121 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_init_command.py                      | Python           |         69 |         17 |         25 |        111 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_malformed_html.py                    | Python           |         95 |         16 |         26 |        137 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_read_command.py                      | Python           |        121 |         10 |         22 |        153 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_read_input_files.py                  | Python           |        275 |         60 |         71 |        406 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_save_command.py                      | Python           |        103 |         22 |         25 |        150 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\io\test_special_characters.py                | Python           |         54 |          8 |         11 |         73 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\spellcheck\test_spellcheck.py                | Python           |        214 |         38 |         74 |        326 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\stress\test_performance.py                   | Python           |        114 |         28 |         35 |        177 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_commands.py                             | Python           |        109 |         26 |         35 |        170 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_dir_tree_command.py                     | Python           |        161 |         37 |         55 |        253 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_display_enhancements.py                 | Python           |        138 |         32 |         49 |        219 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_io.py                                   | Python           |        157 |         21 |         37 |        215 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_main_session_persistence.py             | Python           |         50 |          9 |         13 |         72 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_model.py                                | Python           |        141 |         31 |         42 |        214 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_session_comprehensive.py                | Python           |        298 |         93 |        108 |        499 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_session_integration.py                  | Python           |          0 |          1 |          1 |          2 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_session_manager.py                      | Python           |          0 |          1 |          1 |          2 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_session_state.py                        | Python           |        133 |         37 |         46 |        216 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_spellcheck.py                           | Python           |        222 |          7 |         42 |        271 |
+| c:\Users\xy\Documents\GitHub\OOP_lab1\tests\test_system_integration.py                   | Python           |        224 |         51 |         56 |        331 |
+| Total                                                                                    |                  |      8,182 |      1,381 |      2,454 |     12,017 |
++------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+

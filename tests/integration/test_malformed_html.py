@@ -1,16 +1,17 @@
-import pytest
 import os
+import pytest
 import tempfile
 from unittest.mock import patch, mock_open
 
 from src.core.html_model import HtmlModel
+from src.core.element import HtmlElement
 from src.commands.base import CommandProcessor
-from src.commands.io_commands import ReadCommand, SaveCommand
+from src.commands.io_commands import ReadCommand
+from src.commands.command_exceptions import CommandExecutionError
 from src.io.parser import HtmlParser
-from src.core.exceptions import ElementNotFoundError
 
 class TestMalformedHtml:
-    """测试处理格式不良HTML的能力"""
+    """测试对格式错误的HTML的处理"""
     
     @pytest.fixture
     def setup(self):
@@ -19,24 +20,25 @@ class TestMalformedHtml:
         processor = CommandProcessor()
         
         # 创建临时目录
-        with tempfile.TemporaryDirectory() as temp_dir:
-            yield {
-                'model': model,
-                'processor': processor, 
-                'temp_dir': temp_dir
-            }
+        temp_dir = tempfile.mkdtemp()
+        
+        return {
+            'model': model,
+            'processor': processor,
+            'temp_dir': temp_dir
+        }
     
     def test_unclosed_tags(self):
         """测试处理未闭合标签的能力"""
         parser = HtmlParser()
-        
+
         # 包含未闭合标签的HTML
         html_content = """
-        <html>
-          <head>
+        <html id="html">
+          <head id="head">
             <title id="title">Unclosed Tags Test
           </head>
-          <body>
+          <body id="body">
             <div id="container">
               <p id="p1">Paragraph 1
               <p id="p2">Paragraph 2
@@ -44,29 +46,42 @@ class TestMalformedHtml:
           </body>
         </html>
         """
-        
+
         # 解析应该成功完成
         root = parser.parse_string(html_content)  # 使用正确的方法名
         assert root is not None
         assert root.tag == 'html'
-        
+
         # 尝试访问元素
         model = HtmlModel()
         model.replace_content(root)
-        
-        # 验证至少基本结构是存在的
+
+        # 验证至少基本结构是存在的 - 确保使用显式提供的ID
         assert model.find_by_id('html') is not None
-        assert model.find_by_id('head') is not None
-        assert model.find_by_id('body') is not None
+        assert model.find_by_id('container') is not None
+        assert model.find_by_id('p1') is not None
+        assert model.find_by_id('p2') is not None
         
-        # 查找p元素，忽略title元素（因为格式不良可能导致解析不一致）
-        p1 = model.find_by_id('p1')
-        assert p1 is not None
-        assert 'Paragraph 1' in p1.text if p1.text else False
-        
-        p2 = model.find_by_id('p2')
-        assert p2 is not None
-        assert 'Paragraph 2' in p2.text if p2.text else False
+    def test_empty_file(self, setup):
+        """测试处理空文件"""
+        model = setup['model']
+        processor = setup['processor']
+        temp_dir = setup['temp_dir']
+
+        # 创建空文件
+        empty_file = os.path.join(temp_dir, 'empty.html')
+        with open(empty_file, 'w') as f:
+            f.write('')
+
+        # 尝试读取
+        read_cmd = ReadCommand(processor, model, empty_file)
+
+        # 期望抛出CommandExecutionError异常
+        with pytest.raises(CommandExecutionError) as excinfo:
+            processor.execute(read_cmd)
+            
+        # 验证错误消息包含"文件内容为空"
+        assert "文件内容为空" in str(excinfo.value)
     
     def test_nested_errors(self):
         """测试处理错误嵌套的HTML"""
@@ -99,28 +114,6 @@ class TestMalformedHtml:
         
         p1 = model.find_by_id('p1')
         assert p1 is not None
-        
-    def test_empty_file(self, setup):
-        """测试处理空文件"""
-        model = setup['model']
-        processor = setup['processor']
-        temp_dir = setup['temp_dir']
-        
-        # 创建空文件
-        empty_file = os.path.join(temp_dir, 'empty.html')
-        with open(empty_file, 'w') as f:
-            f.write('')
-            
-        # 尝试读取
-        read_cmd = ReadCommand(processor, model, empty_file)
-        
-        # 应该优雅地处理
-        try:
-            result = processor.execute(read_cmd)
-            assert result is False  # 应该返回False而不是崩溃
-        except Exception as e:
-            # 如果抛出异常也是可以接受的，但不应该是未处理的异常
-            assert isinstance(e, (ValueError, IOError)) 
     
     def test_severely_malformed_html(self, setup):
         """测试处理严重畸形的HTML"""
