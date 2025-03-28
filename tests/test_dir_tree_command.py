@@ -184,3 +184,69 @@ class TestDirTreeCommand:
         mock_calls = [call[0][0] for call in mock_print.call_args_list]
         output = '\n'.join(mock_calls)
         assert "显示目录结构失败" in output
+
+    @patch('builtins.print')
+    @patch('os.getcwd')
+    def test_directory_display_integration(self, mock_getcwd, mock_print, temp_dir_structure):
+        """测试通过main接口调用dir-tree命令"""
+        from src.main import main
+        
+        mock_getcwd.return_value = temp_dir_structure
+        
+        # 创建测试会话
+        session = SessionManager()
+        
+        # 打开一个文件
+        file_path = os.path.join(temp_dir_structure, "file1.html")
+        session.load(file_path)
+        
+        # 使用DirTreeCommand直接执行
+        command = DirTreeCommand(session)
+        command.execute()
+        
+        # 捕获输出
+        mock_calls = [call[0][0] for call in mock_print.call_args_list]
+        output = '\n'.join(mock_calls)
+        
+        # 验证基本目录结构
+        assert "目录结构:" in output
+        assert "dir1/" in output
+        assert "dir2/" in output
+        
+        # 验证打开的文件带有*标记
+        assert "file1.html*" in output.replace(" ", "")
+    
+    @patch('builtins.print')
+    @patch('os.getcwd')
+    def test_update_open_files_mark(self, mock_getcwd, mock_print, temp_dir_structure):
+        """测试切换打开的文件后，文件标记会更新"""
+        mock_getcwd.return_value = temp_dir_structure
+        
+        session = SessionManager()
+        
+        # 加载第一个文件
+        file1_path = os.path.join(temp_dir_structure, "file1.html")
+        session.load(file1_path)
+        
+        # 执行dir-tree，验证file1被标记
+        command = DirTreeCommand(session)
+        command.execute()
+        
+        mock_calls = [call[0][0] for call in mock_print.call_args_list]
+        output1 = '\n'.join(mock_calls)
+        assert "file1.html*" in output1.replace(" ", "")
+        
+        mock_print.reset_mock()  # 清除之前的调用
+        
+        # 加载第二个文件
+        file2_path = os.path.join(temp_dir_structure, "file2.html")
+        session.load(file2_path)
+        
+        # 再次执行dir-tree，验证两个文件都被标记
+        command2 = DirTreeCommand(session)
+        command2.execute()
+        
+        mock_calls = [call[0][0] for call in mock_print.call_args_list]
+        output2 = '\n'.join(mock_calls)
+        assert "file1.html*" in output2.replace(" ", "")
+        assert "file2.html*" in output2.replace(" ", "")
