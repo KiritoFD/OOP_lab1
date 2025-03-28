@@ -50,15 +50,9 @@ class TestSpellCheck:
     def model(self):
         """创建测试用的HTML模型"""
         model = HtmlModel()
-        # 添加一些带文本的元素
-        p1 = HtmlElement('p', 'p1')
-        p1.text = "This is corect."  # 故意的拼写错误
-        
-        p2 = HtmlElement('p', 'p2')
-        p2.text = "Another misstake here."  # 故意的拼写错误
-        
-        model.append_child('body', p1)
-        model.append_child('body', p2)
+        # 添加一些带文本的元素 - 修正为使用正确的append_child签名
+        model.append_child('body', 'p', 'p1', "This is corect.")  # 故意的拼写错误
+        model.append_child('body', 'p', 'p2', "Another misstake here.")  # 故意的拼写错误
         return model
 
     @pytest.fixture

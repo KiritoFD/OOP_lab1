@@ -42,8 +42,9 @@ class TestHtmlModel:
         # 创建新元素
         div = HtmlElement('div', 'test-div')
         
-        # 添加到body
-        model.append_child('body', div)
+        # 使用正确的方法签名: append_child(parent_id, tag, id, text=None)
+        # 而不是 append_child(parent_id, element)
+        model.append_child('body', 'div', 'test-div')
         
         # 验证添加成功
         added_div = model.find_by_id('test-div')
@@ -53,20 +54,17 @@ class TestHtmlModel:
         
     def test_add_duplicate_id(self, model):
         """测试添加重复ID的元素"""
-        div1 = HtmlElement('div', 'test-div')
-        div2 = HtmlElement('div', 'test-div')
-        
-        model.append_child('body', div1)
+        # 第一个元素
+        model.append_child('body', 'div', 'test-div')
         
         # 尝试添加重复ID的元素
         with pytest.raises(DuplicateIdError):
-            model.append_child('body', div2)
+            model.append_child('body', 'div', 'test-div')
             
     def test_remove_element(self, model):
         """测试删除元素"""
         # 准备要删除的元素
-        div = HtmlElement('div', 'test-div')
-        model.append_child('body', div)
+        model.append_child('body', 'div', 'test-div')
         
         # 执行删除
         try:
@@ -77,7 +75,6 @@ class TestHtmlModel:
         # 验证删除成功
         with pytest.raises(ElementNotFoundError):
             model.find_by_id('test-div')
-        assert div not in model.find_by_id('body').children
         
     def test_remove_nonexistent_element(self, model):
         """测试删除不存在的元素"""
@@ -97,17 +94,10 @@ class TestHtmlModel:
     def test_element_hierarchy(self, model):
         """测试元素层级关系"""
         # 创建多层嵌套结构
-        elements = [
-            HtmlElement('div', 'parent'),
-            HtmlElement('p', 'child1'),
-            HtmlElement('span', 'child2'),
-            HtmlElement('em', 'grandchild')
-        ]
-        
-        model.append_child('body', elements[0])  # 添加父元素
-        model.append_child('parent', elements[1])  # 添加第一个子元素
-        model.append_child('parent', elements[2])  # 添加第二个子元素
-        model.append_child('child2', elements[3])  # 添加孙元素
+        model.append_child('body', 'div', 'parent')
+        model.append_child('parent', 'p', 'child1')
+        model.append_child('parent', 'span', 'child2')
+        model.append_child('child2', 'em', 'grandchild')
         
         # 验证层级关系
         parent = model.find_by_id('parent')
@@ -126,10 +116,8 @@ class TestHtmlModel:
     def test_clear_model(self, model):
         """测试清空模型"""
         # 添加一些元素
-        div = HtmlElement('div', 'test-div')
-        p = HtmlElement('p', 'test-p')
-        model.append_child('body', div)
-        model.append_child('test-div', p)
+        model.append_child('body', 'div', 'test-div')
+        model.append_child('test-div', 'p', 'test-p')
         
         # 验证元素已添加
         assert model.find_by_id('test-div') is not None
@@ -138,7 +126,7 @@ class TestHtmlModel:
         # 清空模型
         model.clear()
         
-        # 验证模型已清空
+        # 验证模型已清空，但保留基本结构
         with pytest.raises(ElementNotFoundError):
             model.find_by_id('test-div')
         with pytest.raises(ElementNotFoundError):
@@ -147,10 +135,7 @@ class TestHtmlModel:
     def test_element_text(self, model):
         """测试元素文本操作"""
         # 创建带文本的元素
-        p = HtmlElement('p', 'test-p')
-        p.text = 'Test text'
-        
-        model.append_child('body', p)
+        model.append_child('body', 'p', 'test-p', 'Test text')
         
         # 验证文本正确设置
         element = model.find_by_id('test-p')
@@ -167,15 +152,9 @@ class TestHtmlModel:
     def test_nested_operations(self, model):
         """测试嵌套元素的操作"""
         # 创建嵌套结构
-        elements = {
-            'parent': HtmlElement('div', 'parent'),
-            'child1': HtmlElement('p', 'child1'),
-            'child2': HtmlElement('p', 'child2')
-        }
-
-        model.append_child('body', elements['parent'])
-        model.append_child('parent', elements['child1'])
-        model.append_child('parent', elements['child2'])
+        model.append_child('body', 'div', 'parent')
+        model.append_child('parent', 'p', 'child1')
+        model.append_child('parent', 'p', 'child2')
         
         # 测试删除父元素级联删除所有子元素
         try:
@@ -194,14 +173,14 @@ class TestHtmlModel:
     def test_element_attributes(self, model):
         """测试元素属性操作"""
         # 创建带属性的元素
-        div = HtmlElement('div', 'test-div')
-        div.attributes['class'] = 'test-class'
-        div.attributes['data-test'] = 'test-value'
+        model.append_child('body', 'div', 'test-div')
         
-        model.append_child('body', div)
+        # 添加属性
+        element = model.find_by_id('test-div')
+        element.attributes['class'] = 'test-class'
+        element.attributes['data-test'] = 'test-value'
         
         # 验证属性正确设置
-        element = model.find_by_id('test-div')
         assert element.attributes['class'] == 'test-class'
         assert element.attributes['data-test'] == 'test-value'
         

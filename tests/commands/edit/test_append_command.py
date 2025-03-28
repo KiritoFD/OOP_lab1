@@ -129,15 +129,32 @@ class TestAppendCommand:
         
         # 撤销全部命令
         assert processor.undo() is True  # 撤销span1
-        assert model.find_by_id('span1') is None
+        try:
+            model.find_by_id('span1')
+            assert False, "span1应该已被删除"
+        except ElementNotFoundError:
+            # 期待这个异常，表示元素已删除
+            pass
+        
         assert model.find_by_id('p1') is not None
         
         assert processor.undo() is True  # 撤销p1
-        assert model.find_by_id('p1') is None
+        try:
+            model.find_by_id('p1')
+            assert False, "p1应该已被删除"
+        except ElementNotFoundError:
+            # 期待这个异常，表示元素已删除
+            pass
+        
         assert model.find_by_id('div1') is not None
         
         assert processor.undo() is True  # 撤销div1
-        assert model.find_by_id('div1') is None
+        try:
+            model.find_by_id('div1')
+            assert False, "div1应该已被删除"
+        except ElementNotFoundError:
+            # 期待这个异常，表示元素已删除
+            pass
         
         # 重做全部命令
         assert processor.redo() is True  # 重做div1
