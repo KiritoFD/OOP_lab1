@@ -2,7 +2,8 @@ from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor
 from src.commands.io_commands import InitCommand, SaveCommand, ReadCommand
 from src.commands.command_exceptions import CommandExecutionError
-from src.commands.display_commands import PrintTreeCommand  # Add this import
+from src.commands.display_commands import PrintTreeCommand
+from src.state.session_state import SessionState
 import os
 
 class Editor:
@@ -82,10 +83,67 @@ class Editor:
 class SessionManager:
     """管理多个编辑器实例的会话"""
     
-    def __init__(self):
+    def __init__(self, state_manager=None):
         """初始化会话管理器"""
         self.editors = {}  # 文件名到编辑器的映射
         self.active_editor = None  # 当前活动的编辑器
+        
+        # 设置状态管理器
+        self.state_manager = state_manager or SessionState()
+        
+    def restore_session(self) -> bool:
+        """恢复上一次的会话状态
+        
+        Returns:
+            是否成功恢复会话
+        """
+        state = self.state_manager.load_state()
+        if not state or not state.get("open_files"):
+            return False
+            
+        # 恢复打开的文件
+        success = False
+        for file_path in state["open_files"]:
+            if os.path.exists(file_path):
+                if self.load(file_path):
+                    success = True
+                    
+                    # 恢复文件的设置
+                    file_settings = state["file_settings"].get(file_path, {})
+                    if "show_id" in file_settings:
+                        self.editors[file_path].show_id = file_settings["show_id"]
+            else:
+                print(f"警告: 无法恢复文件，文件不存在: {file_path}")
+        
+        # 恢复活动文件
+        active_file = state.get("active_file")
+        if active_file and active_file in self.editors:
+            self.active_editor = self.editors[active_file]
+            print(f"已恢复活动文件: {active_file}")
+        
+        return success
+        
+    def save_session(self) -> bool:
+        """保存当前会话状态
+        
+        Returns:
+            是否成功保存会话
+        """
+        # 收集打开的文件列表
+        open_files = list(self.editors.keys())
+        
+        # 获取当前活动文件
+        active_file = self.active_editor.filename if self.active_editor else None
+        
+        # 收集每个文件的设置
+        file_settings = {}
+        for file_path, editor in self.editors.items():
+            file_settings[file_path] = {
+                "show_id": editor.show_id
+            }
+        
+        # 保存状态
+        return self.state_manager.save_state(open_files, active_file, file_settings)
     
     def load(self, filename):
         """加载文件并使其成为活动编辑器"""

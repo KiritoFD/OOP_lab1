@@ -5,6 +5,8 @@ from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
+from src.state.session_state import SessionState
+import sys
 
 def print_help():
     """显示帮助信息"""
@@ -37,8 +39,19 @@ def print_help():
 
 def main():
     """主函数"""
+    # 创建SessionManager并恢复上一次会话
     session = SessionManager()
-    print("欢迎使用HTML编辑器!")
+    
+    # 尝试恢复会话状态
+    restored = False
+    if "--new" not in sys.argv:  # 如果没有--new参数，尝试恢复会话
+        restored = session.restore_session()
+    
+    if not restored:
+        print("欢迎使用HTML编辑器!")
+    else:
+        print("已恢复上次会话。")
+    
     print("输入'help'查看可用命令")
     
     while True:
@@ -138,6 +151,9 @@ def main():
                 print_help()
             
             elif cmd == "exit":
+                # 保存会话状态
+                session.save_session()
+                
                 # 检查是否有未保存的文件
                 unsaved = [f for f, e in session.editors.items() if e.modified]
                 if unsaved:
