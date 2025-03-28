@@ -249,6 +249,13 @@ class TestSystemIntegration:
             new_session.execute_command(DeleteCommand(new_session.get_active_model(), "non-existent-id"))
             output = ''.join([str(call[0][0]) for call in mock_print.call_args_list if len(call[0]) > 0])
             assert "失败" in output
+
+        # Test reopening the application with command line arguments
+        with patch('sys.argv', ['main.py']):
+            with patch('builtins.input', side_effect=['exit']):
+                with patch('src.main.SessionManager', return_value=new_session):
+                    from src.main import main
+                    main()  # Should restore the previous session
     
     def test_run_all_individual_tests(self, monkeypatch):
         """运行所有单独的测试类以确保完整的覆盖范围"""
@@ -307,7 +314,15 @@ class TestSystemIntegration:
             "会话状态保存": TestSessionState.test_save_load_state,
             "会话状态恢复": TestSessionState.test_session_manager_save_restore,
             "撤销/重做功能": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_undo_redo_functionality'),
-            "HTML编辑命令": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_editing_commands')
+            "HTML编辑命令": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_editing_commands'),
+            "命令行参数处理": TestMainSessionPersistence.test_no_restore_with_new_flag,
+            "应用启动状态恢复": TestMainSessionPersistence.test_session_restore_on_startup,
+            "应用退出状态保存": TestMainSessionPersistence.test_save_session_on_exit,
+            "IO命令与文件操作": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_io_commands_and_tree_structure'),
+            "拼写检查功能": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_spellcheck'),
+            "错误处理": hasattr(test_comprehensive.TestComprehensiveIntegration, 'test_error_handling') and 
+                      getattr(test_comprehensive.TestComprehensiveIntegration, 'test_error_handling'),
+            "权限错误处理": TestDirTreeCommand.test_permission_denied_handling
         }
         
         # 验证所有功能都有对应的测试
