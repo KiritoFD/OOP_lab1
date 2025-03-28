@@ -2,6 +2,7 @@ from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor
 from src.commands.io_commands import InitCommand, SaveCommand, ReadCommand
 from src.commands.command_exceptions import CommandExecutionError
+from src.commands.display_commands import PrintTreeCommand  # Add this import
 import os
 
 class Editor:
@@ -13,6 +14,7 @@ class Editor:
         self.model = HtmlModel()
         self.processor = CommandProcessor()
         self.modified = False
+        self.show_id = True  # 默认显示ID
         
     def load(self):
         """加载文件内容到编辑器"""
@@ -200,11 +202,31 @@ class SessionManager:
             print(f"文件 {filename} 未加载。请先使用'load'命令加载。")
             return False
     
+    def set_show_id(self, show: bool):
+        """设置当前活动编辑器是否显示ID"""
+        if not self.active_editor:
+            print("没有活动编辑器。请先加载文件。")
+            return False
+        
+        self.active_editor.show_id = show
+        print(f"ID显示已{'启用' if show else '禁用'}")
+        return True
+    
+    def get_show_id(self):
+        """获取当前活动编辑器是否显示ID的设置"""
+        if not self.active_editor:
+            return True  # 默认显示ID
+        return self.active_editor.show_id
+    
     def execute_command(self, command):
         """在活动编辑器上执行命令"""
         if not self.active_editor:
             print("没有活动编辑器。请先加载文件。")
             return False
+        
+        # 如果是PrintTreeCommand并且没有设置show_id，使用编辑器的设置
+        if isinstance(command, PrintTreeCommand) and command.show_id is None:
+            command.show_id = self.active_editor.show_id
         
         return self.active_editor.execute_command(command)
     

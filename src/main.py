@@ -30,6 +30,9 @@ def print_help():
     print("    redo                   - 重做上一个操作")
     print("    exit                   - 退出程序")
     print("    help                   - 显示本帮助信息")
+    
+    print("\n  显示选项:")
+    print("    showid true|false      - 控制树形显示时是否显示ID")
 
 def main():
     """主函数"""
@@ -99,6 +102,15 @@ def main():
                 if session.active_editor:
                     command = EditIdCommand(session.get_active_model(), args[0], args[1])
                     session.execute_command(command)
+            
+            # 处理showid命令
+            elif cmd == "showid" and len(args) >= 1:
+                if args[0].lower() == "true":
+                    session.set_show_id(True)
+                elif args[0].lower() == "false":
+                    session.set_show_id(False)
+                else:
+                    print("无效参数。使用 'showid true' 或 'showid false'")
             
             # 其他命令
             elif cmd == "tree":
