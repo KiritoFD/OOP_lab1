@@ -58,6 +58,58 @@ pytest -m "not slow"  # 跳过耗时测试
 ```bash
 pytest --cov=src tests/
 ```
+---------- coverage: platform win32, python 3.12.7-final-0 -----------
+当前覆盖率
+Name                                       Stmts   Miss  Cover
+--------------------------------------------------------------
+src\__init__.py                                0      0   100%
+src\application\__init__.py                    0      0   100%
+src\application\command_parser.py             87     47    46%
+src\commands\__init__.py                       0      0   100%
+src\commands\base.py                          59      8    86%
+src\commands\command_exceptions.py             9      1    89%
+src\commands\display\__init__.py               0      0   100%
+src\commands\display\base.py                   0      0   100%
+src\commands\display\dir_tree.py               0      0   100%
+src\commands\display\print_tree.py             0      0   100%
+src\commands\display\spell_check.py            0      0   100%
+src\commands\display_commands.py             145     19    87%
+src\commands\edit\__init__.py                  6      0   100%
+src\commands\edit\append_command.py           52      4    92%
+src\commands\edit\delete_command.py           48      5    90%
+src\commands\edit\edit_id_command.py          56     11    80%
+src\commands\edit\edit_text_command.py        40      7    82%
+src\commands\edit\insert_command.py           73     17    77%
+src\commands\io\__init__.py                    0      0   100%
+src\commands\io\init.py                        0      0   100%
+src\commands\io\read.py                        0      0   100%
+src\commands\io\save.py                        0      0   100%
+src\commands\io_commands.py                  120     27    78%
+src\commands\observer.py                       5      1    80%
+src\core\__init__.py                           0      0   100%
+src\core\element.py                           48     17    65%
+src\core\exceptions.py                        20      2    90%
+src\core\html_element.py                       0      0   100%
+src\core\html_model.py                        96     28    71%
+src\core\html_writer.py                        0      0   100%
+src\core\parser.py                            69     69     0%
+src\io\__init__.py                             0      0   100%
+src\io\html_writer.py                          0      0   100%
+src\io\parser.py                             125     48    62%
+src\io\writer.py                              47     17    64%
+src\main.py                                  126     70    44%
+src\session_manager.py                       203     19    91%
+src\spellcheck\__init__.py                     0      0   100%
+src\spellcheck\adapters\__init__.py            0      0   100%
+src\spellcheck\adapters\language_tool.py      10      8    20%
+src\spellcheck\checker.py                     79     20    75%
+src\spellcheck\models.py                      18     18     0%
+src\spellcheck\reporters.py                   41     41     0%
+src\state\__init__.py                          0      0   100%
+src\state\session_state.py                    39      4    90%
+src\utils\html_utils.py                        9      6    33%
+--------------------------------------------------------------
+TOTAL                                       1630    514    68%
 
 ## 项目说明
 
