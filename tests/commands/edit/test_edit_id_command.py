@@ -52,7 +52,7 @@ class TestEditIdCommand:
         """测试编辑不存在元素的ID"""
         cmd = EditIdCommand(model, 'non-existent', 'new-id')
         
-        # 期待CommandExecutionError
+        # 期待CommandExecutionError并仅检查异常消息中包含关键字
         with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd)
         assert "未找到" in str(excinfo.value) or "not found" in str(excinfo.value).lower()
@@ -62,7 +62,7 @@ class TestEditIdCommand:
         # 尝试将ID改为已经存在的ID
         cmd = EditIdCommand(model, 'test-p', 'test-div')
         
-        # 修改为期待CommandExecutionError
+        # 修改为期待CommandExecutionError并仅检查异常消息中包含关键字
         with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd)
         assert "已存在" in str(excinfo.value) or "exist" in str(excinfo.value).lower()

@@ -46,7 +46,7 @@ class TestEditTextCommand:
         """测试编辑不存在元素的文本"""
         cmd = EditTextCommand(model, 'non-existent', '测试文本')
         
-        # 期待CommandExecutionError而不是ElementNotFoundError
+        # 期待CommandExecutionError并仅检查异常消息中包含关键字
         with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd)
         assert "不存在" in str(excinfo.value) or "not exist" in str(excinfo.value).lower()

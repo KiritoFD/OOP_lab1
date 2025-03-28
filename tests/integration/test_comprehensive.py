@@ -369,21 +369,21 @@ class TestComprehensiveIntegration:
         file_path = os.path.join(temp_dir, 'special_chars.html')
         processor.execute(SaveCommand(model, file_path))
         
-        # 尝试读取到新模型，但这里可能会因为ID冲突而失败，我们改为只测试保存功能
-        # 而不测试读取功能，因为读取功能在其他测试中已经有专门测试
+        # 跳过读取验证，因为会有ID冲突问题
+        # 而是直接检查文件是否包含了预期的内容
         with open(file_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
+            content = f.read()
             
-            # 验证基本内容存在
+            # 验证文件包含所有特殊文本内容
             for i, text in enumerate(special_texts):
-                # 检查ID和一些文本内容是否被正确保存
-                assert f'special{i}' in html_content
+                elem_id = f'special{i}'
+                assert elem_id in content, f"ID {elem_id} 应该在输出文件中"
                 
-                # 选择关键词检查
-                key_words = text.split()[:2]
-                for word in key_words:
-                    if '<' not in word and '>' not in word and '&' not in word:
-                        assert word in html_content
+                # 检查特殊字符是否正确保存
+                for word in text.split():
+                    if len(word) > 1 and '<' not in word and '>' not in word:
+                        # 避免HTML标签的检查，因为可能被转义
+                        assert word in content or word.replace('"', '&quot;') in content
     
     def test_error_handling(self, setup):
         """测试错误处理"""

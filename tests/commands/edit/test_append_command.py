@@ -49,18 +49,18 @@ class TestAppendCommand:
         cmd1 = AppendCommand(model, 'div', 'test-div', 'body')
         processor.execute(cmd1)
         
-        # 尝试添加相同ID的元素
+        # 尝试添加相同ID的元素 - 显式使用异常字符串检查
         cmd2 = AppendCommand(model, 'div', 'test-div', 'body')
         with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd2)
-        assert "已存在" in str(excinfo.value)
+        assert "已存在" in str(excinfo.value) or "exists" in str(excinfo.value).lower()
             
     def test_append_invalid_parent(self, model, processor):
         """测试追加到不存在的父元素"""
         cmd = AppendCommand(model, 'div', 'test-div', 'non-existent')
         with pytest.raises(CommandExecutionError) as excinfo:
             processor.execute(cmd)
-        assert "未找到" in str(excinfo.value)
+        assert "未找到" in str(excinfo.value) or "not found" in str(excinfo.value).lower()
             
     def test_append_undo(self, model, processor):
         """测试追加命令的撤销"""

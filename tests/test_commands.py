@@ -13,10 +13,14 @@ class TestCommand(Command):
         self.executed = False
         self.return_value = return_value
         self.description = "Test Command"
+        self.recordable = False  # Add recordable attribute
     
     def execute(self):
         self.executed = True
         return self.return_value
+        
+    def undo(self):  # Add required undo method
+        return False
 
 class TestRecordableCommand(Command):
     """用于测试的可记录命令实现"""
@@ -26,6 +30,7 @@ class TestRecordableCommand(Command):
         self.redone = False
         self.return_value = return_value
         self.description = "Test Recordable Command"
+        self.recordable = True  # Add recordable attribute
     
     def execute(self):
         self.executed = True
