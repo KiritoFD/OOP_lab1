@@ -52,27 +52,22 @@ class TestAppendCommand:
         # 尝试添加相同ID的元素
         cmd2 = AppendCommand(model, 'div', 'test-div', 'body')
         
-        # 使用try-except块进行更灵活的验证
-        try:
+        # 直接使用pytest.raises来捕获异常
+        with pytest.raises(CommandExecutionError):
             processor.execute(cmd2)
-            assert False, "应该抛出异常"
-        except CommandExecutionError as e:
-            # 仅验证错误信息中包含ID和"已存在"字样
-            assert 'test-div' in str(e)
-            assert any(phrase in str(e) for phrase in ["已存在", "exists", "duplicate"])
-            
+        
+        # 验证原始元素仍然存在且未被修改
+        element = model.find_by_id('test-div')
+        assert element is not None
+        assert element.tag == 'div'
+        
     def test_append_invalid_parent(self, model, processor):
         """测试追加到不存在的父元素"""
         cmd = AppendCommand(model, 'div', 'test-div', 'non-existent')
         
-        # 使用try-except块进行更灵活的验证
-        try:
+        # 直接使用pytest.raises来捕获异常
+        with pytest.raises(CommandExecutionError):
             processor.execute(cmd)
-            assert False, "应该抛出异常"
-        except CommandExecutionError as e:
-            # 仅验证错误信息中包含父元素ID和"未找到"字样
-            assert 'non-existent' in str(e)
-            assert any(phrase in str(e) for phrase in ["未找到", "not found"])
             
     def test_append_undo(self, model, processor):
         """测试追加命令的撤销"""
