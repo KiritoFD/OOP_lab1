@@ -46,10 +46,14 @@ class TestEditTextCommand:
         """测试编辑不存在元素的文本"""
         cmd = EditTextCommand(model, 'non-existent', '测试文本')
         
-        # 期待CommandExecutionError并仅检查异常消息中包含关键字
-        with pytest.raises(CommandExecutionError) as excinfo:
+        # 使用try-except块进行更灵活的验证
+        try:
             processor.execute(cmd)
-        assert "不存在" in str(excinfo.value) or "not exist" in str(excinfo.value).lower()
+            assert False, "应该抛出异常"
+        except CommandExecutionError as e:
+            # 仅验证错误信息中包含元素ID和"不存在"字样
+            assert 'non-existent' in str(e)
+            assert any(phrase in str(e) for phrase in ["不存在", "not exist", "not found"])
             
     def test_edit_text_empty(self, model, processor, setup_elements):
         """测试设置空文本"""

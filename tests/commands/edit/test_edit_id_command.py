@@ -52,20 +52,28 @@ class TestEditIdCommand:
         """测试编辑不存在元素的ID"""
         cmd = EditIdCommand(model, 'non-existent', 'new-id')
         
-        # 期待CommandExecutionError并仅检查异常消息中包含关键字
-        with pytest.raises(CommandExecutionError) as excinfo:
+        # 使用try-except块进行更灵活的验证
+        try:
             processor.execute(cmd)
-        assert "未找到" in str(excinfo.value) or "not found" in str(excinfo.value).lower()
+            assert False, "应该抛出异常"
+        except CommandExecutionError as e:
+            # 仅验证错误信息中包含元素ID和"未找到"字样
+            assert 'non-existent' in str(e) 
+            assert any(phrase in str(e) for phrase in ["未找到", "not found", "不存在"])
     
     def test_id_collision(self, model, processor, setup_elements):
         """测试ID冲突的情况"""
         # 尝试将ID改为已经存在的ID
         cmd = EditIdCommand(model, 'test-p', 'test-div')
         
-        # 修改为期待CommandExecutionError并仅检查异常消息中包含关键字
-        with pytest.raises(CommandExecutionError) as excinfo:
+        # 使用try-except块进行更灵活的验证
+        try:
             processor.execute(cmd)
-        assert "已存在" in str(excinfo.value) or "exist" in str(excinfo.value).lower()
+            assert False, "应该抛出异常"
+        except CommandExecutionError as e:
+            # 仅验证错误信息中包含新ID和"已存在"字样
+            assert 'test-div' in str(e)
+            assert any(phrase in str(e) for phrase in ["已存在", "exists", "duplicate"])
             
     def test_edit_id_undo(self, model, processor, setup_elements):
         """测试编辑ID的撤销操作"""
