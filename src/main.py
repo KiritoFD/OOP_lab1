@@ -4,7 +4,7 @@ from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand
+from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
 
 def print_help():
     """显示帮助信息"""
@@ -25,6 +25,7 @@ def print_help():
     
     print("\n  其他命令:")
     print("    tree                   - 显示HTML树结构")
+    print("    dir-tree               - 显示当前目录结构")
     print("    spell-check            - 检查拼写错误")
     print("    undo                   - 撤销上一个操作")
     print("    redo                   - 重做上一个操作")
@@ -117,6 +118,10 @@ def main():
                 if session.active_editor:
                     command = PrintTreeCommand(session.get_active_model())
                     session.execute_command(command)
+            
+            elif cmd == "dir-tree":
+                command = DirTreeCommand(session)
+                session.execute_command(command)
             
             elif cmd == "spell-check":
                 if session.active_editor:
