@@ -32,6 +32,7 @@ class HtmlModel:
         """
         element = self._id_map.get(id)
         if element is None:
+            # 恢复原始错误信息格式以匹配测试
             raise ElementNotFoundError(f"未找到ID为 '{id}' 的元素")
         return element
         

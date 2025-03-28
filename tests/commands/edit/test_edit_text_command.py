@@ -3,7 +3,7 @@ from src.commands.edit.edit_text_command import EditTextCommand  # Correct impor
 from src.commands.edit.append_command import AppendCommand  # Correct import path
 from src.commands.base import CommandProcessor
 from src.core.html_model import HtmlModel
-from src.core.exceptions import ElementNotFoundError, CommandExecutionError
+from src.core.exceptions import ElementNotFoundError,DuplicateIdError, CommandExecutionError
 
 class TestEditTextCommand:
     @pytest.fixture
