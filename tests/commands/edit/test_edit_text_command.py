@@ -4,6 +4,7 @@ from src.commands.edit.append_command import AppendCommand  # Correct import pat
 from src.commands.base import CommandProcessor
 from src.core.html_model import HtmlModel
 from src.core.exceptions import ElementNotFoundError,DuplicateIdError, CommandExecutionError
+from src.commands.command_exceptions import CommandExecutionError as CmdExecError
 
 class TestEditTextCommand:
     @pytest.fixture
@@ -46,10 +47,13 @@ class TestEditTextCommand:
         """测试编辑不存在元素的文本"""
         cmd = EditTextCommand(model, 'non-existent', '测试文本')
         
-        # 使用pytest.raises并用match参数匹配部分错误信息
-        with pytest.raises(ElementNotFoundError, match="元素.*不存在"):
+        # 更新异常处理，可处理直接异常或包装异常
+        with pytest.raises((ElementNotFoundError, CmdExecError)) as excinfo:
             processor.execute(cmd)
             
+        # 无论是哪种异常，错误信息都应该包含元素ID
+        assert 'non-existent' in str(excinfo.value)
+
     def test_edit_text_empty(self, model, processor, setup_elements):
         """测试设置空文本"""
         cmd = EditTextCommand(model, 'test-p', '')

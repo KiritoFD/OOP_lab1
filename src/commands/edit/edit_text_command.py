@@ -13,24 +13,26 @@ class EditTextCommand(Command):
         self.new_text = text
         self.old_text = None
         self.description = f"编辑文本: '{element_id}'"
+        print(f"[DEBUG] 初始化EditTextCommand - 元素ID: {element_id}, 新文本长度: {len(text)}")
     
     def execute(self):
         """执行编辑文本命令"""
         try:
-            # 查找元素 - 如果不存在会抛出ElementNotFoundError
+            print(f"[DEBUG] 尝试查找元素: {self.element_id}")
             element = self.model.find_by_id(self.element_id)
             
-            # 保存原始文本用于撤销
             self.old_text = element.text
+            print(f"[DEBUG] 保存原始文本: {self.old_text}")
             
-            # 设置新文本
             element.text = self.new_text
+            print(f"[INFO] 成功更新元素 {self.element_id} 的文本内容")
             
             return True
         except ElementNotFoundError as e:
-            # 修改错误信息格式以匹配测试预期
+            print(f"[ERROR] 元素 {self.element_id} 不存在")
             raise CommandExecutionError(f"元素 '{self.element_id}' 不存在") from e
         except Exception as e:
+            print(f"[ERROR] 执行编辑文本命令时出错: {e}")
             raise CommandExecutionError(f"执行编辑文本命令时出错: {e}") from e
 
     def _validate_params(self):

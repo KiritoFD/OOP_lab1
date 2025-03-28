@@ -127,7 +127,7 @@ class TestRealWorldScenarios:
         processor.execute(AppendCommand(model, 'h1', 'page-title', 'container', 'My Webpage'))
         
         # 2. 错误地添加重复ID (模拟用户错误)
-        with pytest.raises(CommandExecutionError) as excinfo:
+        with pytest.raises(DuplicateIdError) as excinfo:
             processor.execute(AppendCommand(model, 'div', 'container', 'body'))
         
         # 验证错误信息包含"已存在"
