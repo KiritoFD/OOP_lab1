@@ -96,25 +96,52 @@ class TestDirTreeCommand:
         """测试处理无权限访问的目录"""
         mock_getcwd.return_value = temp_dir_structure
         
-        # 模拟权限错误
-        def side_effect(path):
-            if path.endswith("dir2"):
-                raise PermissionError("Permission denied")
-            else:
-                return os.listdir(path)
-                
-        mock_listdir.side_effect = side_effect
-
-        # 执行dir-tree命令
-        session = SessionManager()
-        command = DirTreeCommand(session)
-        command.execute()
-
-        # 验证权限被拒绝的提示
-        mock_calls = [call[0][0] for call in mock_print.call_args_list]
-        output = '\n'.join(mock_calls)
+        # 创建一个简单的列表来跟踪已调用的路径，防止递归导致的堆栈溢出
+        called_paths = set()
         
-        assert "[访问被拒绝]" in output
+        # 简化的mock实现
+        def simple_mock_listdir(path):
+            # 标准化路径
+            norm_path = os.path.normpath(path)
+            
+            # 防止重复调用相同路径
+            if norm_path in called_paths:
+                return []
+            called_paths.add(norm_path)
+            
+            # 只对特定目录引发权限错误
+            target_dir = os.path.normpath(os.path.join(temp_dir_structure, "dir2"))
+            if norm_path == target_dir:
+                raise PermissionError("Permission denied")
+                
+            # 对其他路径返回部分模拟数据，而不是递归调用真实的os.listdir
+            if norm_path == temp_dir_structure:
+                return ["dir1", "dir2", "file1.html", "file2.html"]
+            elif "dir1" in norm_path:
+                return ["file3.html"]
+            else:
+                return []  # 返回空列表，避免进一步递归
+                
+        # 使用简化的mock函数
+        mock_listdir.side_effect = simple_mock_listdir
+        
+        # 修复os.path.isdir的mock，确保它与os.listdir的模拟一致
+        with patch('os.path.isdir', lambda p: not p.endswith('.html')):
+            session = SessionManager()
+            command = DirTreeCommand(session)
+            result = command.execute()
+            
+            # 验证命令执行成功
+            assert result is True
+            
+            # 找出所有调用中是否有"访问被拒绝"的消息
+            has_access_denied = False
+            for args, _ in mock_print.call_args_list:
+                if args and "[访问被拒绝]" in str(args[0]):
+                    has_access_denied = True
+                    break
+            
+            assert has_access_denied, "没有发现'[访问被拒绝]'消息"
 
     @patch('builtins.print')
     @patch('os.getcwd')
