@@ -46,8 +46,8 @@ class TestEditTextCommand:
         """测试编辑不存在元素的文本"""
         cmd = EditTextCommand(model, 'non-existent', '测试文本')
         
-        # 直接使用pytest.raises来捕获异常
-        with pytest.raises(CommandExecutionError):
+        # 使用pytest.raises并用match参数匹配部分错误信息
+        with pytest.raises(ElementNotFoundError, match="元素.*不存在"):
             processor.execute(cmd)
             
     def test_edit_text_empty(self, model, processor, setup_elements):

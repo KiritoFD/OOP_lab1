@@ -40,8 +40,11 @@ class AppendCommand(Command):
             
             print(f"Appended '{self.id_value}' as child of '{self.parent_id}'")
             return True
+        except (DuplicateIdError, ElementNotFoundError):
+            # 直接抛出原始异常
+            raise
         except Exception as e:
-            raise CommandExecutionError(f"执行追加命令失败: {e}") from e
+            raise CommandExecutionError(f"执行追加命令时发生意外错误: {str(e)}") from e
     
     def _validate_params(self) -> None:
         """验证参数有效性"""

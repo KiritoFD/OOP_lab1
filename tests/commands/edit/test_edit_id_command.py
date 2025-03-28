@@ -3,7 +3,7 @@ from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.edit.append_command import AppendCommand
 from src.commands.base import CommandProcessor
 from src.core.html_model import HtmlModel
-from src.core.exceptions import ElementNotFoundError, IdCollisionError, CommandExecutionError
+from src.core.exceptions import ElementNotFoundError,DuplicateIdError, IdCollisionError, CommandExecutionError
 
 class TestEditIdCommand:
     @pytest.fixture
@@ -52,8 +52,8 @@ class TestEditIdCommand:
         """测试编辑不存在元素的ID"""
         cmd = EditIdCommand(model, 'non-existent', 'new-id')
         
-        # 直接使用pytest.raises来捕获异常
-        with pytest.raises(CommandExecutionError):
+        # 使用pytest.raises并用match参数匹配部分错误信息
+        with pytest.raises(ElementNotFoundError, match="未找到ID为"):
             processor.execute(cmd)
     
     def test_id_collision(self, model, processor, setup_elements):
@@ -61,8 +61,8 @@ class TestEditIdCommand:
         # 尝试将ID改为已经存在的ID
         cmd = EditIdCommand(model, 'test-p', 'test-div')
         
-        # 直接使用pytest.raises来捕获异常
-        with pytest.raises(CommandExecutionError):
+        # 使用pytest.raises并用match参数匹配部分错误信息
+        with pytest.raises(DuplicateIdError, match="已存在"):
             processor.execute(cmd)
             
     def test_edit_id_undo(self, model, processor, setup_elements):

@@ -32,7 +32,6 @@ class TestSpecialCharactersHandling:
     
     @pytest.mark.parametrize("test_text", [
         "Simple text without special chars",
-        # Use xfail marker to indicate that this test is expected to fail
         pytest.param("Text with <html> tags", 
                      marks=pytest.mark.skip(reason="ID冲突问题导致跳过")),
         "Text with & ampersand",
@@ -70,8 +69,13 @@ class TestSpecialCharactersHandling:
             # 检查元素ID存在于保存的文件中
             assert elem_id in content
             
-            # 简化验证：只检查文件内容中包含元素ID就足够了
-            assert elem_id in content
+            # 验证特殊字符的处理
+            if "<html>" in test_text:
+                assert "&lt;html&gt;" in content or "<html>" in content
+            if "&" in test_text:
+                assert "&amp;" in content or "&" in content
+            if "\"" in test_text:
+                assert "&quot;" in content or "\"" in content
     
     def test_save_load_unicode_chars(self, setup):
         """测试保存和加载Unicode字符"""

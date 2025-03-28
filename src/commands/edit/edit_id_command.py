@@ -57,9 +57,9 @@ class EditIdCommand(Command):
             self.model.update_element_id(self.element_id, self.new_id)
             
             return True
-        except (ElementNotFoundError, DuplicateIdError, InvalidOperationError) as e:
-            print(f"捕获到预期异常：{type(e).__name__} - {str(e)}")
-            raise CommandExecutionError(str(e)) from e
+        except (ElementNotFoundError, DuplicateIdError, InvalidOperationError):
+            # 直接抛出原始异常
+            raise
         except Exception as e:
             print(f"捕获到未预期异常：{type(e).__name__} - {str(e)}")
             raise CommandExecutionError(f"执行编辑ID命令时出错: {str(e)}") from e
