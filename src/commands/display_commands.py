@@ -142,6 +142,14 @@ class SpellCheckCommand(Command):
         # 递归检查子元素
         for child in element.children:
             self._check_element(child, path)
+    
+    def undo(self) -> bool:
+        """显示命令不需要撤销"""
+        return False
+    
+    def __str__(self):
+        """返回命令的字符串表示"""
+        return "SpellCheckCommand()"
 
 class DirTreeCommand(Command):
     """显示目录结构命令"""

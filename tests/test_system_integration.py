@@ -191,6 +191,10 @@ class TestSystemIntegration:
         # 加载另一个文件
         assert session.load(files["docs/about.html"]) is True
         
+        # 确保第二个文件也设置为不显示ID
+        session.set_show_id(False)
+        assert session.get_show_id() is False
+        
         # 8. 测试撤销和重做功能
         # 进行编辑
         session.execute_command(AppendCommand(
@@ -232,7 +236,11 @@ class TestSystemIntegration:
         expected_file = os.path.normpath(files["docs/about.html"])
         assert current_file == expected_file
         
-        # 确认showid设置
+        # 验证当前活动文件的showid设置
+        assert new_session.get_show_id() is False
+        
+        # 切换到index.html并验证其show_id设置也被正确恢复
+        new_session.edit(files["index.html"])
         assert new_session.get_show_id() is False
         
         # 10. 测试错误处理

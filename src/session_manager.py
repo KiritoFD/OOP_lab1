@@ -103,22 +103,36 @@ class SessionManager:
             
         # 恢复打开的文件
         success = False
+        normalized_settings = {}
+        
+        # 先规范化文件设置的路径
+        for file_path, settings in state.get("file_settings", {}).items():
+            normalized_settings[os.path.normpath(file_path)] = settings
+        
         for file_path in state["open_files"]:
             if os.path.exists(file_path):
                 if self.load(file_path):
                     success = True
                     
-                    # 恢复文件的设置
-                    file_settings = state["file_settings"].get(file_path, {})
-                    if "show_id" in file_settings:
-                        self.editors[file_path].show_id = file_settings["show_id"]
+                    # 恢复文件的设置 - 使用规范化的路径
+                    norm_path = os.path.normpath(file_path)
+                    if norm_path in normalized_settings:
+                        file_settings = normalized_settings[norm_path]
+                        if "show_id" in file_settings:
+                            self.editors[norm_path].show_id = file_settings["show_id"]
             else:
                 print(f"警告: 无法恢复文件，文件不存在: {file_path}")
         
         # 恢复活动文件
         active_file = state.get("active_file")
-        if active_file and active_file in self.editors:
-            self.active_editor = self.editors[active_file]
+        if active_file and os.path.normpath(active_file) in self.editors:
+            norm_active = os.path.normpath(active_file)
+            self.active_editor = self.editors[norm_active]
+            
+            # 确保活动编辑器使用正确的show_id设置
+            if norm_active in normalized_settings and "show_id" in normalized_settings[norm_active]:
+                self.active_editor.show_id = normalized_settings[norm_active]["show_id"]
+                
             print(f"已恢复活动文件: {active_file}")
         
         return success
