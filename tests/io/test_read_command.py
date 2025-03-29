@@ -1,7 +1,7 @@
 import pytest
 import os
 from src.core.html_model import HtmlModel
-from src.commands.io_commands import ReadCommand
+from src.commands.io import ReadCommand
 from src.commands.base import CommandProcessor
 from src.commands.edit import AppendCommand
 from src.commands.command_exceptions import CommandExecutionError

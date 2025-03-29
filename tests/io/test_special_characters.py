@@ -3,7 +3,7 @@ import os
 import tempfile
 from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor
-from src.commands.io_commands import SaveCommand, ReadCommand, InitCommand
+from src.commands.io import SaveCommand, ReadCommand, InitCommand
 from src.commands.edit.append_command import AppendCommand
 from src.core.exceptions import ElementNotFoundError
 from src.commands.command_exceptions import CommandExecutionError

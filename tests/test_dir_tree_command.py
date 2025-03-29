@@ -4,7 +4,7 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 
-from src.commands.display_commands import DirTreeCommand
+from src.commands.display import DirTreeCommand
 from src.session_manager import SessionManager
 
 

@@ -19,7 +19,7 @@ from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
+from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
 from src.state.session_state import SessionState
 from src.spellcheck.checker import SpellChecker
 
@@ -294,7 +294,7 @@ class TestSystemIntegration:
             test_module = test_comprehensive
             assert hasattr(test_module.TestComprehensiveIntegration, 'test_html_model_basics')
             assert hasattr(test_module.TestComprehensiveIntegration, 'test_editing_commands')
-            assert hasattr(test_module.TestComprehensiveIntegration, 'test_io_commands_and_tree_structure')
+            assert hasattr(test_module.TestComprehensiveIntegration, 'test_io_and_tree_structure')
             assert hasattr(test_module.TestComprehensiveIntegration, 'test_spellcheck')
             assert hasattr(test_module.TestComprehensiveIntegration, 'test_undo_redo_functionality')
             
@@ -318,7 +318,7 @@ class TestSystemIntegration:
             "命令行参数处理": TestMainSessionPersistence.test_no_restore_with_new_flag,
             "应用启动状态恢复": TestMainSessionPersistence.test_session_restore_on_startup,
             "应用退出状态保存": TestMainSessionPersistence.test_save_session_on_exit,
-            "IO命令与文件操作": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_io_commands_and_tree_structure'),
+            "IO命令与文件操作": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_io_and_tree_structure'),
             "拼写检查功能": getattr(test_comprehensive.TestComprehensiveIntegration, 'test_spellcheck'),
             "错误处理": hasattr(test_comprehensive.TestComprehensiveIntegration, 'test_error_handling') and 
                       getattr(test_comprehensive.TestComprehensiveIntegration, 'test_error_handling'),

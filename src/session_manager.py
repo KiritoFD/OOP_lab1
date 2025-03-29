@@ -1,8 +1,8 @@
 from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor
-from src.commands.io_commands import InitCommand, SaveCommand, ReadCommand
+from src.commands.io import InitCommand, SaveCommand, ReadCommand
 from src.commands.command_exceptions import CommandExecutionError
-from src.commands.display_commands import PrintTreeCommand
+from src.commands.display import PrintTreeCommand
 from src.state.session_state import SessionState
 import os
 

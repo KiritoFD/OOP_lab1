@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 
 from src.core.html_model import HtmlModel
 from src.core.element import HtmlElement
-from src.commands.display_commands import SpellCheckCommand
+from src.commands.display import SpellCheckCommand
 from src.commands.base import CommandProcessor
 from src.spellcheck.checker import SpellChecker, SpellError
 
@@ -76,7 +76,7 @@ class TestSpellCheckCommand:
         
         return model
         
-    @patch('src.commands.display_commands.SpellChecker')
+    @patch('src.spellcheck.checker.SpellChecker')
     def test_spell_check_basic(self, mock_checker_class, spell_check_model, processor, capsys):
         """测试基本的拼写检查功能"""
         # 设置模拟的检查器行为
@@ -102,7 +102,7 @@ class TestSpellCheckCommand:
         assert "paragreph" in output
         assert "paragraph" in output  # 建议的修正
         
-    @patch('src.commands.display_commands.SpellChecker')
+    @patch('src.spellcheck.checker.SpellChecker')
     def test_spell_check_multiple_errors(self, mock_checker_class, spell_check_model, processor, capsys):
         """测试多个拼写错误的情况"""
         mock_checker = mock_checker_class.return_value
@@ -132,7 +132,7 @@ class TestSpellCheckCommand:
         assert "exampel" in output
         assert "example" in output  # 建议词
         
-    @patch('src.commands.display_commands.SpellChecker')
+    @patch('src.spellcheck.checker.SpellChecker')
     def test_spell_check_empty_model(self, mock_checker_class, model, processor, capsys):
         """测试在空模型上的拼写检查"""
         mock_checker = mock_checker_class.return_value

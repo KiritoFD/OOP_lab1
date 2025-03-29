@@ -5,13 +5,13 @@ from unittest.mock import patch, MagicMock
 
 from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor
-from src.commands.io_commands import InitCommand, SaveCommand, ReadCommand
+from src.commands.io import InitCommand, SaveCommand, ReadCommand
 from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand
+from src.commands.display import PrintTreeCommand, SpellCheckCommand
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError
 from src.spellcheck.checker import SpellChecker, SpellError  # Fixed import to use SpellError from checker module
 
@@ -114,7 +114,7 @@ class TestComprehensiveIntegration:
         with pytest.raises(ElementNotFoundError):
             model.find_by_id('paragraph')  # 元素已删除
     
-    def test_io_commands_and_tree_structure(self, setup, capsys):
+    def test_io_and_tree_structure(self, setup, capsys):
         """测试IO命令和树形结构显示"""
         model = setup['model']
         processor = setup['processor']

@@ -54,7 +54,7 @@ pytest --cov . >test_out.txt
 | src\commands\display\dir_tree.py                   |       0       |       0       |     100%     |
 | src\commands\display\print_tree.py                 |       0       |       0       |     100%     |
 | src\commands\display\spell_check.py                |       0       |       0       |     100%     |
-| src\commands\display_commands.py                   |      145      |      19      |      87%      |
+| src\commands\display.py                   |      145      |      19      |      87%      |
 | src\commands\edit\__init__.py                    |       6       |       0       |     100%     |
 | src\commands\edit\append_command.py                |       52       |       4       |      92%      |
 | src\commands\edit\delete_command.py                |       48       |       5       |      90%      |
@@ -65,7 +65,7 @@ pytest --cov . >test_out.txt
 | src\commands\io\init.py                            |       0       |       0       |     100%     |
 | src\commands\io\read.py                            |       0       |       0       |     100%     |
 | src\commands\io\save.py                            |       0       |       0       |     100%     |
-| src\commands\io_commands.py                        |      120      |      27      |      78%      |
+| src\commands\io.py                        |      120      |      27      |      78%      |
 | src\commands\observer.py                           |       5       |       1       |      80%      |
 | src\core\__init__.py                             |       0       |       0       |     100%     |
 | src\core\element.py                                |       48       |      17      |      65%      |
@@ -101,7 +101,7 @@ pytest --cov . >test_out.txt
 | tests\commands\edit\test_insert_command.py         |       78       |       3       |      96%      |
 | tests\commands\file\test_read_command.py           |       0       |       0       |     100%     |
 | tests\commands\io\__init__.py                    |       0       |       0       |     100%     |
-| tests\commands\io\test_io_commands.py              |       0       |       0       |     100%     |
+| tests\commands\io\test_io.py              |       0       |       0       |     100%     |
 | tests\commands\io\test_save_command.py             |       0       |       0       |     100%     |
 | tests\conftest.py                                  |       23       |       1       |      96%      |
 | tests\core\test_element.py                         |       0       |       0       |     100%     |

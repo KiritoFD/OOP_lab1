@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from src.application.command_parser import CommandParser
 from src.core.html_model import HtmlModel
 from src.commands.base import CommandProcessor, CommandObserver
-from src.commands.io_commands import ReadCommand, SaveCommand, InitCommand
+from src.commands.io import ReadCommand, SaveCommand, InitCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.append_command import AppendCommand
@@ -18,7 +18,7 @@ from src.core.exceptions import ElementNotFoundError
 from src.session_manager import SessionManager
 from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
+from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
 from src.state.session_state import SessionState
 
 class Application(CommandObserver):

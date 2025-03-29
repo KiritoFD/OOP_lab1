@@ -16,14 +16,14 @@ core.html_model -> core.element, core.exceptions
 ```
 commands.base -> core.html_model
 commands.edit_commands -> commands.base, core.html_model, core.element
-commands.display_commands -> commands.base, core.html_model, core.element, spellcheck.*
-commands.io_commands -> commands.base, core.html_model, io.*
+commands.display -> commands.base, core.html_model, core.element, spellcheck.*
+commands.io -> commands.base, core.html_model, io.*
 ```
 
 - **commands.base**: 命令基类和处理器
 - **commands.edit_commands**: 编辑操作命令
-- **commands.display_commands**: 显示相关命令
-- **commands.io_commands**: 输入输出命令
+- **commands.display**: 显示相关命令
+- **commands.io**: 输入输出命令
 
 ## 3. I/O依赖
 
@@ -40,7 +40,7 @@ io.writer -> core.html_model, core.element
 ```
 spellcheck.checker -> (无依赖)
 spellcheck.reporters -> spellcheck.checker
-commands.display_commands -> spellcheck.checker, spellcheck.reporters
+commands.display -> spellcheck.checker, spellcheck.reporters
 ```
 
 - **spellcheck.checker**: 拼写检查核心

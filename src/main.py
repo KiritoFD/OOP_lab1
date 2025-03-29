@@ -4,7 +4,7 @@ from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
+from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
 from src.state.session_state import SessionState
 import sys
 

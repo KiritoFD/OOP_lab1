@@ -3,13 +3,13 @@ from typing import Optional
 
 # 使用绝对导入路径 - 修复循环导入
 from src.commands.base import Command
-from src.commands.io_commands import ReadCommand, SaveCommand, InitCommand
+from src.commands.io import ReadCommand, SaveCommand, InitCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.display_commands import PrintTreeCommand
-from src.commands.display_commands import SpellCheckCommand
+from src.commands.display import PrintTreeCommand
+from src.commands.display import SpellCheckCommand
 from src.commands.edit.insert_command import InsertCommand
 from src.core.exceptions import InvalidCommandError
 

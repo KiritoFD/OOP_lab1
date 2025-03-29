@@ -4,7 +4,7 @@ from io import StringIO
 from bs4 import BeautifulSoup
 from src.core.html_model import HtmlModel
 from src.core.element import HtmlElement
-from src.commands.display_commands import PrintTreeCommand
+from src.commands.display import PrintTreeCommand
 from src.commands.base import CommandProcessor
 from src.commands.edit.append_command import AppendCommand
 from src.core.exceptions import ElementNotFoundError

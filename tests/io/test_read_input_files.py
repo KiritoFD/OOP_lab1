@@ -1,6 +1,6 @@
 import pytest
 import os
-from src.commands.io_commands import ReadCommand
+from src.commands.io import ReadCommand
 from src.commands.base import CommandProcessor
 from src.core.html_model import HtmlModel
 from src.core.exceptions import ElementNotFoundError

@@ -6,9 +6,9 @@ import shutil
 
 from src.session_manager import SessionManager
 from src.commands.edit.append_command import AppendCommand
-from src.commands.display_commands import PrintTreeCommand
+from src.commands.display import PrintTreeCommand
 from src.spellcheck.checker import SpellChecker, SpellError
-from src.commands.io_commands import InitCommand
+from src.commands.io import InitCommand
 
 class TestDisplayEnhancements:
     """测试HTML树形结构的显示增强功能"""

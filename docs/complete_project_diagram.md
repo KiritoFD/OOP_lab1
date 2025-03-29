@@ -468,7 +468,7 @@ graph TB
     
     Commands --> EditCommands["edit"]
     Commands --> DisplayCommands["display"]
-    Commands --> IOCommands["io_commands"]
+    Commands --> IOCommands["io"]
     Commands --> CommandBase["base.py"]
     
     Tests --> CoreTests

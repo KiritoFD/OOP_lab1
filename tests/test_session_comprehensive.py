@@ -9,7 +9,7 @@ from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_id_command import EditIdCommand
-from src.commands.io_commands import InitCommand, SaveCommand, ReadCommand
+from src.commands.io import InitCommand, SaveCommand, ReadCommand
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError, InvalidOperationError
 from src.commands.command_exceptions import CommandExecutionError, CommandParameterError
 

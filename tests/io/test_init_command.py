@@ -1,6 +1,6 @@
 import pytest
 from src.core.html_model import HtmlModel
-from src.commands.io_commands import InitCommand
+from src.commands.io import InitCommand
 from src.commands.base import CommandProcessor
 from src.commands.edit.append_command import AppendCommand
 

@@ -6,7 +6,7 @@ from unittest.mock import patch, mock_open
 from src.core.html_model import HtmlModel
 from src.core.element import HtmlElement
 from src.commands.base import CommandProcessor
-from src.commands.io_commands import ReadCommand
+from src.commands.io import ReadCommand
 from src.commands.command_exceptions import CommandExecutionError
 from src.io.parser import HtmlParser
 
