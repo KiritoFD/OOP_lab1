@@ -1,11 +1,11 @@
-from src.session_manager import SessionManager
+from src.session.session_manager import SessionManager
 from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
-from src.state.session_state import SessionState
+from src.session.state.session_state import SessionState
 import sys
 
 def print_help():

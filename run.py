@@ -15,11 +15,11 @@ from src.commands.edit.append_command import AppendCommand
 from src.core.exceptions import ElementNotFoundError
 
 # Add new imports for session management
-from src.session_manager import SessionManager
+from src.session.session_manager import SessionManager
 from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
-from src.state.session_state import SessionState
+from src.session.state.session_state import SessionState
 
 class Application(CommandObserver):
     """HTML编辑器应用主类，实现CommandObserver接口"""

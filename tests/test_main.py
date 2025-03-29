@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 # Try to import the real Application, but fall back to a stub if needed
 try:
-    from main import Application
+    from run import Application
     print("Successfully imported Application from main")
 except ImportError as e:
     print(f"Failed to import Application: {e}")

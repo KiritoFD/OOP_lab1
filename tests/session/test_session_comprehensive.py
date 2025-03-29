@@ -4,7 +4,7 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 
-from src.session_manager import SessionManager, Editor
+from src.session.session_manager import SessionManager, Editor
 from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.delete_command import DeleteCommand

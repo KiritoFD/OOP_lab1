@@ -13,14 +13,14 @@ from tests.session.test_session_state import TestSessionState
 from tests.session.test_main_session_persistence import TestMainSessionPersistence
 import tests.integration.test_comprehensive as test_comprehensive
 
-from src.session_manager import SessionManager
+from src.session.session_manager import SessionManager
 from src.commands.edit.append_command import AppendCommand
 from src.commands.edit.insert_command import InsertCommand
 from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
-from src.state.session_state import SessionState
+from src.session.state.session_state import SessionState
 from src.spellcheck.checker import SpellChecker
 
 class TestSystemIntegration:
@@ -253,8 +253,8 @@ class TestSystemIntegration:
         # Test reopening the application with command line arguments
         with patch('sys.argv', ['main.py']):
             with patch('builtins.input', side_effect=['exit']):
-                with patch('src.main.SessionManager', return_value=new_session):
-                    from src.main import main
+                with patch('src.application.main.SessionManager', return_value=new_session):
+                    from src.application.main import main
                     main()  # Should restore the previous session
     
     def test_run_all_individual_tests(self, monkeypatch):

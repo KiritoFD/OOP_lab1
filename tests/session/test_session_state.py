@@ -5,8 +5,8 @@ import json
 import shutil
 from unittest.mock import patch
 
-from src.state.session_state import SessionState
-from src.session_manager import SessionManager
+from src.session.state.session_state import SessionState
+from src.session.session_manager import SessionManager
 
 class TestSessionState:
     """测试会话状态的保存和恢复功能"""

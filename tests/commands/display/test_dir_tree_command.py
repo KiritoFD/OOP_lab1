@@ -5,7 +5,7 @@ import shutil
 from unittest.mock import patch, MagicMock
 
 from src.commands.display import DirTreeCommand
-from src.session_manager import SessionManager
+from src.session.session_manager import SessionManager
 
 
 class TestDirTreeCommand:
@@ -189,7 +189,7 @@ class TestDirTreeCommand:
     @patch('os.getcwd')
     def test_directory_display_integration(self, mock_getcwd, mock_print, temp_dir_structure):
         """测试通过main接口调用dir-tree命令"""
-        from src.main import main
+        from src.application.main import main
         
         mock_getcwd.return_value = temp_dir_structure
         

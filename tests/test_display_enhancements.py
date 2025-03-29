@@ -4,7 +4,7 @@ import tempfile
 import os
 import shutil
 
-from src.session_manager import SessionManager
+from src.session.session_manager import SessionManager
 from src.commands.edit.append_command import AppendCommand
 from src.commands.display import PrintTreeCommand
 from src.spellcheck.checker import SpellChecker, SpellError
