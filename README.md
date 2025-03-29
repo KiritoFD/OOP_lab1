@@ -57,6 +57,7 @@ HTML Editor Project
 │   ├── io
 │   └── input
 ├── docs
+├── run.py
 └── requirements.txt
 ```
 
@@ -68,9 +69,9 @@ HTML Editor Project
 
 ```bash
 pip install -r requirements.txt
-python main.py                  # Normal startup
-python main.py --new            # Force create a new session
-python main.py file.html        # Open a specific file at startup
+python run.py                  # Normal startup
+python run.py --new            # Force create a new session
+python run.py file.html        # Open a specific file at startup
 ```
 
 ### Testing
