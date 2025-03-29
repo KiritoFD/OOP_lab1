@@ -13,7 +13,6 @@ HTML Editor Project
 │   │   └── command_parser.py
 │   ├── commands
 │   │   ├── base.py
-│   │   ├── command_exceptions.py
 │   │   ├── display
 │   │   │   ├── base.py
 │   │   │   ├── dir_tree.py
@@ -29,6 +28,7 @@ HTML Editor Project
 │   │   │   ├── init.py
 │   │   │   ├── read.py
 │   │   │   └── save.py
+│   │   ├── command_exceptions.py
 │   │   └── observer.py
 │   ├── core
 │   │   ├── element.py
