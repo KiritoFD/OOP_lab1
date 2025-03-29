@@ -1,4 +1,6 @@
 beautifulsoup4>=4.9.3
 pytest>=7.0.0
 pyspellchecker>=0.8.2
-language-tool-python>=2.7.1
+language-tool-python>=2.7.
+pytest-cov>=3.0.0
+pytest-mock>=3.10.0

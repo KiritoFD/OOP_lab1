@@ -8,9 +8,9 @@ import importlib
 
 # Import all test modules for comprehensive testing
 from tests.test_display_enhancements import TestDisplayEnhancements
-from tests.test_dir_tree_command import TestDirTreeCommand
-from tests.test_session_state import TestSessionState
-from tests.test_main_session_persistence import TestMainSessionPersistence
+from tests.commands.display.test_dir_tree_command import TestDirTreeCommand
+from tests.session.test_session_state import TestSessionState
+from tests.session.test_main_session_persistence import TestMainSessionPersistence
 import tests.integration.test_comprehensive as test_comprehensive
 
 from src.session_manager import SessionManager

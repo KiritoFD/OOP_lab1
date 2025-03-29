@@ -31,7 +31,7 @@ class SpellError:
 class SpellChecker:
     """拼写检查器 - 直接使用pyspellchecker库的API"""
     
-    def __init__(self, language="en_US", custom_dict=None):
+    def __init__(self, language="en", custom_dict=None):
         """初始化拼写检查器
         
         Args:
@@ -141,13 +141,13 @@ class ConsoleReporter(SpellErrorReporter):
             print("未发现拼写错误。")
             return
             
-        print(f"发现 {len(errors)} 个拼写错误:")
-        
+        # 删除原来的汇总计数，改为单独报告每个错误
         for i, error_dict in enumerate(errors):
             error = error_dict['error']
             element_id = error_dict['element_id']
             path = error_dict['path']
             
+            print(f"发现拼写错误:")
             print(f"\n{i+1}. 位置: {path} (ID: {element_id})")
             print(f"   错误: '{error.wrong_word}'")
             
