@@ -65,24 +65,28 @@ class CommandProcessor:
         Returns:
             撤销成功返回True，否则返回False
         """
+        if not self.history:
+            return False
+
         # 查找最近一个可撤销的命令
-        while self.history:
-            command = self.history.pop()
-            
-            if command.recordable:
-                # 尝试撤销
-                if command.undo():
-                    # 添加到重做列表
-                    self.redos.append(command)
-                    # 通知观察者命令已撤销
-                    self._notify_observers('undo', command=command)
-                    return True
-                else:
-                    # 撤销失败，重新加入历史
-                    self.history.append(command)
-                    return False
+        command = self.history.pop()
         
-        return False
+        # 如果命令不可记录，递归调用以找到下一个可撤销的命令
+        if not getattr(command, 'recordable', True):
+            # 不可记录的命令不应该被撤销，也不应进入redo列表
+            return self.undo() if self.history else False
+        
+        # 尝试撤销命令
+        if command.undo():
+            # 添加到重做列表
+            self.redos.append(command)
+            # 通知观察者命令已撤销
+            self._notify_observers('undo', command=command)
+            return True
+        else:
+            # 撤销失败，重新加入历史
+            self.history.append(command)
+            return False
         
     def redo(self) -> bool:
         """重做最近一次撤销的命令
@@ -94,6 +98,11 @@ class CommandProcessor:
             return False
             
         command = self.redos.pop()
+        
+        # 如果命令不可记录，递归调用以找到下一个可重做的命令
+        if not getattr(command, 'recordable', True):
+            # 不可记录的命令不应该被重做
+            return self.redo() if self.redos else False
         
         # 重新执行该命令
         if command.execute():

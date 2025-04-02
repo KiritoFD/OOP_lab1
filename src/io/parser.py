@@ -6,19 +6,38 @@ from ..core.exceptions import InvalidOperationError
 from ..core.element import HtmlElement
 
 class HtmlParser:
-    """HTML解析器，专门负责HTML文件的读取和解析"""
+    """HTML解析器，负责读取和解析HTML文件"""
     
-    def parse_file(self, file_path: str) -> HtmlElement:
-        """从文件解析HTML"""
-        # 验证文件
+    @staticmethod
+    def parse_file(file_path: str) -> Optional[HtmlElement]:
+        """
+        解析HTML文件并返回根元素
+        
+        Args:
+            file_path: HTML文件路径
+            
+        Returns:
+            HtmlElement: HTML元素树的根元素
+        """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"文件不存在: {file_path}")
-            
-        # 读取文件内容
-        content = self._read_file_with_encoding(file_path)
         
-        # 解析HTML内容
-        return self.parse_string(content)
+        # 读取文件内容
+        with open(file_path, 'rb') as f:
+            content = f.read()
+        
+        # 检测编码
+        detected = chardet.detect(content)
+        encoding = detected['encoding']
+        
+        # 解码内容为Unicode
+        text = content.decode(encoding)
+        
+        # 不再传递encoding参数，因为已经将内容解码为Unicode
+        soup = BeautifulSoup(text, 'html.parser')
+        
+        # 解析HTML结构
+        return HtmlParser._parse_element(soup)
     
     def load_html_file(self, file_path: str) -> HtmlElement:
         """完整的HTML文件加载流程
@@ -93,7 +112,7 @@ class HtmlParser:
             raise InvalidOperationError("HTML内容为空")
             
         # 使用BeautifulSoup解析HTML，明确指定解析器和编码
-        soup = BeautifulSoup(html_content, 'html.parser', from_encoding='utf-8')
+        soup = BeautifulSoup(html_content, 'html.parser')
         html_tag = soup.find('html')
         
         # 如果没有找到html标签，则创建一个默认结构
@@ -103,7 +122,8 @@ class HtmlParser:
         # 解析HTML树
         return self._parse_element(html_tag)
     
-    def _create_default_structure(self):
+    @staticmethod
+    def _create_default_structure():
         """创建默认HTML结构"""
         # 使用标准ID来匹配测试期望
         html = HtmlElement('html', 'html')
@@ -117,7 +137,8 @@ class HtmlParser:
         
         return html
     
-    def _parse_element(self, bs_tag, id_counter=None):
+    @staticmethod
+    def _parse_element(bs_tag, id_counter=None):
         """解析BS4标签为HtmlElement"""
         if id_counter is None:
             id_counter = {'counter': 0}
@@ -164,7 +185,7 @@ class HtmlParser:
         # 处理子元素
         for child in bs_tag.children:
             if hasattr(child, 'name') and child.name:  # 只处理标签节点，忽略文本节点
-                child_element = self._parse_element(child, id_counter)
+                child_element = HtmlParser._parse_element(child, id_counter)
                 element.add_child(child_element)
                 
         return element
@@ -222,11 +243,11 @@ class HtmlParser:
         
         # 添加id
         if element.id:
-            result.append(f' id="{element.id}"')
+            result.append(f' id="{self._escape_attr_value(element.id)}"')
             
         # 添加其他属性
         for name, value in element.attributes.items():
-            result.append(f' {name}="{value}"')
+            result.append(f' {name}="{self._escape_attr_value(value)}"')
         
         # 处理自闭合标签
         if element.tag_name.lower() in self_closing_tags and not element.children and not element.text:
@@ -235,9 +256,10 @@ class HtmlParser:
             
         result.append('>')
         
-        # 添加文本内容
+        # 添加文本内容 - 确保特殊字符被正确处理
         if element.text:
-            result.append(element.text)
+            # 使用html.escape可能更合适，但这里我们自己处理基本的HTML转义
+            result.append(self._escape_html_text(element.text))
             
         # 递归处理子元素
         if element.children:
@@ -248,3 +270,21 @@ class HtmlParser:
         
         # 关闭标签    
         result.append(f"</{element.tag_name}>\n")
+    
+    def _escape_html_text(self, text):
+        """转义HTML文本内容中的特殊字符"""
+        if text is None:
+            return ""
+        return text.replace("&", "&amp;") \
+                  .replace("<", "&lt;") \
+                  .replace(">", "&gt;")
+    
+    def _escape_attr_value(self, value):
+        """转义HTML属性值中的特殊字符"""
+        if value is None:
+            return ""
+        return str(value).replace("&", "&amp;") \
+                        .replace("<", "&lt;") \
+                        .replace(">", "&gt;") \
+                        .replace('"', "&quot;") \
+                        .replace("'", "&#39;")

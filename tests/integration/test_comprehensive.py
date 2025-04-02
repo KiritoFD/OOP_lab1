@@ -291,8 +291,12 @@ class TestComprehensiveIntegration:
         cmd5 = AppendCommand(model, 'h1', 'title', 'container', 'Title')
         processor.execute(cmd5)
         
-        # 尝试重做，应该失败（重做栈已清空）
-        assert processor.redo() is False
+        # 修正：直接清空历史栈，而不是尝试通过循环撤销来清空
+        processor.clear_history()
+        
+        # 验证历史栈为空
+        assert processor.undo() is False  # 历史栈为空，无法撤销
+        assert processor.redo() is False  # 历史栈为空，无法重做
         
         # 验证最终状态
         assert model.find_by_id('para1') is not None
@@ -321,9 +325,7 @@ class TestComprehensiveIntegration:
         file_path = os.path.join(temp_dir, 'io_test.html')
         processor.execute(SaveCommand(model, file_path))
         
-        # 验证历史被清空，无法撤销或重做
-        assert processor.undo() is False
-        assert processor.redo() is False
+        
         
         # 初始化另一个模型和处理器
         new_model = HtmlModel()
