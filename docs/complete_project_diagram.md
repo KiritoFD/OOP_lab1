@@ -20,6 +20,12 @@ graph TB
         CommandProcessor["CommandProcessor\n命令处理器"]
         CommandObserver["CommandObserver\n命令观察者接口"]
         
+        subgraph "命令历史"
+            CommandHistory["CommandHistory\n历史管理器"]
+            UndoCommand["UndoCommand\n撤销命令"]
+            RedoCommand["RedoCommand\n重做命令"]
+        end
+        
         subgraph "编辑命令"
             AppendCommand["AppendCommand\n添加子元素"]
             InsertCommand["InsertCommand\n插入元素"]
@@ -82,6 +88,10 @@ graph TB
     CommandParser -->|创建| AppendCommand & InsertCommand & DeleteCommand & EditTextCommand & EditIdCommand & PrintTreeCommand & DirTreeCommand & SpellCheckCommand & ReadCommand & SaveCommand & InitCommand
     CommandProcessor -->|执行| AppendCommand & InsertCommand & DeleteCommand & EditTextCommand & EditIdCommand & PrintTreeCommand & DirTreeCommand & SpellCheckCommand & ReadCommand & SaveCommand & InitCommand
     CommandProcessor -->|通知| CommandObserver
+    CommandProcessor -->|包含| CommandHistory
+    CommandHistory -->|包含| UndoCommand
+    CommandHistory -->|包含| RedoCommand
+    CommandHistory -->|通知| CommandObserver
     
     %% 编辑命令依赖
     AppendCommand & InsertCommand & DeleteCommand & EditTextCommand & EditIdCommand -->|操作| HtmlModel
@@ -124,6 +134,7 @@ graph TB
     style HtmlModel fill:#3498db
     style HtmlElement fill:#3498db
     style CommandProcessor fill:#2ecc71
+    style CommandHistory fill:#2ecc71
     style SpellChecker fill:#9b59b6
     style HtmlParser fill:#e74c3c
     style HtmlWriter fill:#e74c3c
@@ -165,33 +176,28 @@ sequenceDiagram
     participant Main as 应用主程序
     participant Session as 会话管理器
     participant Processor as 命令处理器
-    participant Command as 命令历史栈中的命令
+    participant History as 命令历史管理器
+    participant UndoCmd as UndoCommand
+    participant Command as 历史命令
     participant Model as HTML模型
     
     User->>Main: 输入undo命令
     Main->>Session: undo()
     Session->>Processor: undo()
-    Processor->>Processor: 从历史栈获取命令
-    Processor->>Command: undo()
+    Processor->>History: 创建UndoCommand
+    History->>UndoCmd: 实例化
+    Processor->>UndoCmd: execute()
+    UndoCmd->>History: pop_last_command()
+    History-->>UndoCmd: 返回待撤销命令
+    UndoCmd->>Command: undo()
     Command->>Model: 撤销操作
     Model-->>Command: 返回结果
-    Command-->>Processor: 返回撤销状态
-    Processor->>Processor: 调整历史指针
-    Processor-->>Session: 返回撤销状态
-    Session-->>Main: 返回撤销状态
-    Main-->>User: 显示结果
-    
-    User->>Main: 输入redo命令
-    Main->>Session: redo()
-    Session->>Processor: redo()
-    Processor->>Processor: 从历史栈获取命令
-    Processor->>Command: redo()
-    Command->>Model: 重做操作
-    Model-->>Command: 返回结果
-    Command-->>Processor: 返回重做状态
-    Processor->>Processor: 调整历史指针
-    Processor-->>Session: 返回重做状态
-    Session-->>Main: 返回重做状态
+    Command-->>UndoCmd: 返回撤销状态
+    UndoCmd->>History: add_to_redos(command)
+    UndoCmd->>History: _notify_observers('undo')
+    UndoCmd-->>Processor: 返回状态
+    Processor-->>Session: 返回状态
+    Session-->>Main: 返回状态
     Main-->>User: 显示结果
 ```
 
@@ -294,11 +300,14 @@ graph LR
         Command[Command接口]
         ConcreteCommands[具体命令类]
         CommandProcessor[命令处理器]
+        CommandHistory[命令历史管理器]
         Invoker[调用者]
         Receiver[接收者]
         
         Invoker -->|调用| CommandProcessor
         CommandProcessor -->|执行/撤销/重做| ConcreteCommands
+        CommandProcessor -->|管理| CommandHistory
+        CommandHistory -->|存储| ConcreteCommands
         ConcreteCommands -.->|实现| Command
         ConcreteCommands -->|操作| Receiver
     end
@@ -367,6 +376,7 @@ graph BT
     
     subgraph "命令层"
         CommandProcessor["命令处理器"]
+        CommandHistory["命令历史管理器"]
         EditCommands["编辑命令"]
         DisplayCommands["显示命令"]
         IOCommands["IO命令"]
@@ -403,6 +413,7 @@ graph BT
     
     CommandParser --> EditCommands & DisplayCommands & IOCommands
     CommandProcessor --> EditCommands & DisplayCommands & IOCommands
+    CommandProcessor --> CommandHistory
     
     EditCommands --> HtmlModel
     DisplayCommands --> HtmlModel
@@ -425,6 +436,7 @@ graph BT
     style Main fill:#ff9900,stroke:#333,stroke-width:2px
     style HtmlModel fill:#3498db,stroke:#333,stroke-width:2px
     style CommandProcessor fill:#2ecc71,stroke:#333,stroke-width:2px
+    style CommandHistory fill:#2ecc71,stroke:#333,stroke-width:2px
     style SpellChecker fill:#9b59b6,stroke:#333,stroke-width:2px
     style Parser fill:#e74c3c,stroke:#333,stroke-width:2px
 ```
@@ -469,6 +481,7 @@ graph TB
     Commands --> EditCommands["edit"]
     Commands --> DisplayCommands["display"]
     Commands --> IOCommands["io"]
+    Commands --> CommandHistory["history"]
     Commands --> CommandBase["base.py"]
     
     Tests --> CoreTests
@@ -481,6 +494,7 @@ graph TB
     CommandTests --> EditTests["edit"]
     CommandTests --> DisplayTests["display"]
     CommandTests --> IOCmdTests["io"]
+    CommandTests --> HistoryTests["history"]
     
     style Root fill:#ff9900
     style Src fill:#3498db
