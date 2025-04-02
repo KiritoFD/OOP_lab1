@@ -29,7 +29,7 @@ class SpellError:
         return f"拼写错误: '{self.wrong_word}', 建议: {', '.join(self.suggestions)}"
 
 class SpellChecker:
-    """拼写检查器 - 直接使用pyspellchecker库的API"""
+    """拼写检查器实现"""
     
     def __init__(self, language="en", custom_dict=None):
         """初始化拼写检查器
@@ -38,8 +38,17 @@ class SpellChecker:
             language (str): 语言代码
             custom_dict (dict, optional): 自定义字典
         """
-        # 直接初始化库的拼写检查器
         self.checker = PySpellChecker(language=language)
+        
+        # 加载字典文件
+        try:
+            dictionary_path = os.path.join("resources", "dictionary.txt")
+            if os.path.exists(dictionary_path):
+                with open(dictionary_path, 'r', encoding='utf-8') as f:
+                    custom_words = [line.strip() for line in f if line.strip()]
+                    self.checker.word_frequency.load_words(custom_words)
+        except Exception as e:
+            print(f"Warning: Could not load dictionary: {e}")
         
         # 如果有自定义字典，直接添加到库的词典中
         if custom_dict:
@@ -100,6 +109,21 @@ class SpellChecker:
                 
         return errors
     
+    def check_element(self, element):
+        """
+        检查HTML元素中的文本拼写错误
+        
+        Args:
+            element: HTML元素
+            
+        Returns:
+            list: 拼写错误列表
+        """
+        if not element.text:
+            return []
+        
+        return self.check_text(element.text)
+    
     # 其他方法直接传递到库的方法
     def add_word(self, word: str):
         """添加单词到字典"""
@@ -127,6 +151,15 @@ class SpellErrorReporter:
             errors (list): 错误列表
         """
         raise NotImplementedError("子类必须实现此方法")
+    
+    # 添加兼容方法
+    def report(self, errors):
+        """兼容性方法，调用report_errors
+        
+        Args:
+            errors (list): 错误列表
+        """
+        return self.report_errors(errors)
 
 class ConsoleReporter(SpellErrorReporter):
     """控制台拼写错误报告器"""
@@ -135,17 +168,25 @@ class ConsoleReporter(SpellErrorReporter):
         """在控制台输出拼写错误报告
         
         Args:
-            errors (list): 错误字典列表
+            errors (list): 错误对象列表或错误字典列表
         """
         if not errors:
             print("未发现拼写错误。")
             return
             
-        # 删除原来的汇总计数，改为单独报告每个错误
-        for i, error_dict in enumerate(errors):
-            error = error_dict['error']
-            element_id = error_dict['element_id']
-            path = error_dict['path']
+        # 处理两种格式的错误: SpellError对象列表或包含SpellError的字典列表
+        for i, error_item in enumerate(errors):
+            # 检查这是直接的SpellError对象还是包含error的字典
+            if isinstance(error_item, dict):
+                # 旧格式 - 字典格式
+                error = error_item['error']
+                element_id = error_item.get('element_id', 'unknown')
+                path = error_item.get('path', '')
+            else:
+                # 新格式 - 直接是SpellError对象
+                error = error_item
+                element_id = 'unknown'  # 无法获取元素ID
+                path = ''               # 无法获取路径
             
             print(f"发现拼写错误:")
             print(f"\n{i+1}. 位置: {path} (ID: {element_id})")

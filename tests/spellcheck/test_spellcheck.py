@@ -30,7 +30,7 @@ class TestSpellChecker(unittest.TestCase):
         errors = self.checker.check_text("this is correct text")
         self.assertEqual(len(errors), 0)
 
-    @pytest.mark.skip(reason="拼写检查库可能不可用")
+    
     def test_check_text_with_errors(self):
         """测试有拼写错误的文本"""
         # 标记为跳过，因为拼写检查器可能没有正确实现
@@ -145,4 +145,4 @@ class TestSpellCheckCommand:
         output = captured.out
         
         # 验证无拼写错误的输出
-        assert "未发现拼写错误" in output
+        assert "No spelling errors found" in output

@@ -64,6 +64,7 @@ HTML Editor Project
 ### Environment Requirements
 
 - Python 3.9+ | Dependencies: See `requirements.txt`
+- conda环境直接export出来的配置在env.yaml
 
 ### Installation & Running
 

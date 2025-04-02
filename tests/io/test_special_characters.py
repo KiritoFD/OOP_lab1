@@ -32,8 +32,6 @@ class TestSpecialCharactersHandling:
     
     @pytest.mark.parametrize("test_text", [
         "Simple text without special chars",
-        pytest.param("Text with <html> tags", 
-                     marks=pytest.mark.skip(reason="ID冲突问题导致跳过")),
         "Text with & ampersand",
         "Text with \"double quotes\"",
         "Text with 'single quotes'",

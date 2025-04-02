@@ -7,7 +7,7 @@ from src.core.html_model import HtmlModel
 from src.core.exceptions import ElementNotFoundError
 from src.commands.command_exceptions import CommandExecutionError
 
-class TestCommand(Command):
+class MockCommand(Command):
     """用于测试的简单命令实现"""
     def __init__(self, return_value=True):
         self.executed = False
@@ -22,7 +22,7 @@ class TestCommand(Command):
     def undo(self):  # Add required undo method
         return False
 
-class TestRecordableCommand(Command):
+class MockRecordableCommand(Command):
     """用于测试的可记录命令实现"""
     def __init__(self, return_value=True):
         self.executed = False
@@ -55,14 +55,14 @@ class TestCommandProcessor:
     
     def test_execute_recordable_command(self, processor):
         """测试执行可记录命令"""
-        cmd = TestRecordableCommand()
+        cmd = MockRecordableCommand()
         assert processor.execute(cmd) is True
         assert cmd.executed is True
         assert len(processor.history) > 0
         
     def test_execute_non_recordable_command(self, processor):
         """测试执行不可记录命令"""
-        cmd = TestCommand()
+        cmd = MockCommand()
         assert processor.execute(cmd) is True
         assert cmd.executed is True
         # 不可记录命令不应该添加到历史记录中
@@ -70,7 +70,7 @@ class TestCommandProcessor:
         
     def test_undo_success(self, processor):
         """测试成功撤销命令"""
-        cmd = TestRecordableCommand()
+        cmd = MockRecordableCommand()
         processor.execute(cmd)
         assert processor.undo() is True
         assert cmd.undone is True
@@ -81,7 +81,7 @@ class TestCommandProcessor:
         
     def test_redo_success(self, processor):
         """测试成功重做命令"""
-        cmd = TestRecordableCommand()
+        cmd = MockRecordableCommand()
         processor.execute(cmd)
         processor.undo()
         # Store result before asserting cmd.redone
@@ -99,14 +99,14 @@ class TestCommandProcessor:
     def test_redo_after_new_command(self, processor):
         """测试在新命令后重做"""
         # 添加第一个命令
-        cmd1 = TestRecordableCommand()
+        cmd1 = MockRecordableCommand()
         processor.execute(cmd1)
         
         # 撤销它
         processor.undo()
         
         # 添加新命令
-        cmd2 = TestRecordableCommand()
+        cmd2 = MockRecordableCommand()
         processor.execute(cmd2)
         
         # 尝试重做第一个命令(应该失败)
