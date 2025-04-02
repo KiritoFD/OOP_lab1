@@ -1,149 +1,120 @@
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod
 from .observer import CommandObserver
 
 class Command(ABC):
-    """命令基类，定义所有命令的共同接口"""
+    """Command base class, defines common interface for all commands"""
     def __init__(self):
-        self.recordable = True  # 是否记录到历史，用于撤销/重做
+        self.recordable = True  # Whether to record in history for undo/redo
     
     @abstractmethod
     def execute(self) -> bool:
-        """执行命令
+        """Execute the command
         
         Returns:
-            执行成功返回True，否则返回False
+            True if execution successful, False otherwise
         """
         pass
         
     @abstractmethod
     def undo(self) -> bool:
-        """撤销命令
+        """Undo the command
         
         Returns:
-            撤销成功返回True，否则返回False
+            True if undo successful, False otherwise
         """
         pass
 
 class CommandProcessor:
-    """命令处理器，管理命令执行、撤销和重做"""
+    """Command processor, manages command execution, undo and redo"""
     def __init__(self):
-        self.history: List[Command] = []  # 历史命令
-        self.redos: List[Command] = []    # 被撤销的命令，用于重做
-        self.observers: List[CommandObserver] = []  # 观察者列表
+        # Import locally to avoid circular dependency
+        from .do.history import CommandHistory
+        self.command_history = CommandHistory()  # Use the dedicated history manager
+        
+    # Add backward compatibility properties
+    @property
+    def history(self):
+        """Backward compatibility property to access history list directly"""
+        return self.command_history.history
+        
+    @property
+    def redos(self):
+        """Backward compatibility property to access redos list directly"""
+        return self.command_history.redos
         
     def execute(self, command: Command) -> bool:
-        """执行命令
+        """Execute a command
         
         Args:
-            command: 要执行的命令
+            command: Command to execute
             
         Returns:
-            执行成功返回True，否则返回False
+            True if execution successful, False otherwise
         """
-        # 注入处理器引用，以便命令可以访问它
+        # Inject processor reference so commands can access it
         if hasattr(command, 'processor'):
             command.processor = self
             
-        # 先检查命令是否可以执行
+        # Check if command can be executed
         if hasattr(command, 'can_execute') and not command.can_execute():
             return False
             
-        # 执行命令 - 不捕获异常，让其传播
+        # Execute command - don't catch exceptions, let them propagate
         result = command.execute()
         
-        # 只记录成功的可记录命令
+        # Only record successful and recordable commands
         if result and getattr(command, 'recordable', True):
-            self.history.append(command)
-            self.redos.clear()
+            self.command_history.add_command(command)
             
         return result
         
     def undo(self) -> bool:
-        """撤销最近一次执行的命令
+        """Undo the most recent command
         
         Returns:
-            撤销成功返回True，否则返回False
+            True if undo successful, False otherwise
         """
-        if not self.history:
-            return False
-
-        # 查找最近一个可撤销的命令
-        command = self.history.pop()
-        
-        # 如果命令不可记录，递归调用以找到下一个可撤销的命令
-        if not getattr(command, 'recordable', True):
-            # 不可记录的命令不应该被撤销，也不应进入redo列表
-            return self.undo() if self.history else False
-        
-        # 尝试撤销命令
-        if command.undo():
-            # 添加到重做列表
-            self.redos.append(command)
-            # 通知观察者命令已撤销
-            self._notify_observers('undo', command=command)
-            return True
-        else:
-            # 撤销失败，重新加入历史
-            self.history.append(command)
-            return False
+        # Use nested UndoCommand from CommandHistory
+        undo_cmd = self.command_history.UndoCommand(self)
+        return self.execute(undo_cmd)
         
     def redo(self) -> bool:
-        """重做最近一次撤销的命令
+        """Redo the most recently undone command
         
         Returns:
-            重做成功返回True，否则返回False
+            True if redo successful, False otherwise
         """
-        if not self.redos:
-            return False
-            
-        command = self.redos.pop()
-        
-        # 如果命令不可记录，递归调用以找到下一个可重做的命令
-        if not getattr(command, 'recordable', True):
-            # 不可记录的命令不应该被重做
-            return self.redo() if self.redos else False
-        
-        # 重新执行该命令
-        if command.execute():
-            # 添加回历史
-            self.history.append(command)
-            # 通知观察者命令已重做
-            self._notify_observers('redo', command=command)
-            return True
-        else:
-            # 重做失败
-            return False
+        # Use nested RedoCommand from CommandHistory
+        redo_cmd = self.command_history.RedoCommand(self)
+        return self.execute(redo_cmd)
             
     def clear_history(self):
-        """清空命令历史"""
-        self.history = []
-        self.redos = []
+        """Clear command history"""
+        self.command_history.clear()
         
     def add_observer(self, observer: CommandObserver):
-        """添加观察者
+        """Add an observer
         
         Args:
-            observer: 实现了CommandObserver接口的对象
+            observer: Object implementing CommandObserver interface
         """
-        if observer not in self.observers:
-            self.observers.append(observer)
+        self.command_history.add_observer(observer)
         
     def remove_observer(self, observer: CommandObserver):
-        """移除观察者
+        """Remove an observer
         
         Args:
-            observer: 要移除的观察者
+            observer: Observer to remove
         """
-        if observer in self.observers:
-            self.observers.remove(observer)
-            
+        self.command_history.remove_observer(observer)
+
+    # Forward the notify_observers method for backward compatibility
     def _notify_observers(self, event_type: str, **kwargs):
-        """通知所有观察者
+        """Notify all observers
         
         Args:
-            event_type: 事件类型
-            kwargs: 事件相关的其他参数
+            event_type: Event type
+            kwargs: Additional event parameters
         """
-        for observer in self.observers:
-            observer.on_command_event(event_type, **kwargs)
+        self.command_history._notify_observers(event_type, **kwargs)
