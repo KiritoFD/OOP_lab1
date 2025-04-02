@@ -8,46 +8,63 @@ This project implements an interactive HTML editor with advanced features like s
 
 ```
 HTML Editor Project
-├── src
-│   ├── application
-│   │   └── command_parser.py
-│   ├── commands
+├── __init__.py
+├── application
+│   ├── __init__.py
+│   ├── command_parser.py
+│   └── main.py
+├── commands
+│   ├── __init__.py
+│   ├── base.py
+│   ├── command_exceptions.py
+│   ├── observer.py
+│   ├── display
+│   │   ├── __init__.py
 │   │   ├── base.py
-│   │   ├── display
-│   │   │   ├── base.py
-│   │   │   ├── dir_tree.py
-│   │   │   ├── print_tree.py
-│   │   │   └── spell_check.py
-│   │   ├── edit
-│   │   │   ├── append_command.py
-│   │   │   ├── delete_command.py
-│   │   │   ├── edit_id_command.py
-│   │   │   ├── edit_text_command.py
-│   │   │   └── insert_command.py
-│   │   ├── io
-│   │   │   ├── init.py
-│   │   │   ├── read.py
-│   │   │   └── save.py
-│   │   ├── command_exceptions.py
-│   │   └── observer.py
-│   ├── core
-│   │   ├── element.py
-│   │   ├── exceptions.py
-│   │   ├── html_element.py
-│   │   ├── html_model.py
-│   │   └── html_writer.py
-│   ├── io
-│   │   ├── html_writer.py
-│   │   ├── parser.py
-│   │   └── writer.py
-│   ├── spellcheck
-│   │   ├── adapters
-│   │   │   └── language_tool.py
-│   │   └── checker.py
-│   ├── state
-│   │   └── session_state.py
-│   └── utils
-│       └── html_utils.py
+│   │   ├── dir_tree.py
+│   │   ├── print_tree.py
+│   │   └── spell_check.py
+│   ├── do
+│   │   ├── __init__.py
+│   │   ├── history.py
+│   │   ├── redo.py
+│   │   ├── undo.py
+│   │   └── undoredo.py
+│   ├── edit
+│   │   ├── __init__.py
+│   │   ├── append_command.py
+│   │   ├── delete_command.py
+│   │   ├── edit_id_command.py
+│   │   ├── edit_text_command.py
+│   │   └── insert_command.py
+│   └── io
+│       ├── __init__.py
+│       ├── init.py
+│       ├── read.py
+│       └── save.py
+├── core
+│   ├── __init__.py
+│   ├── element.py
+│   ├── exceptions.py
+│   └── html_model.py
+├── io
+│   ├── __init__.py
+│   ├── parser.py
+│   └── writer.py
+├── session
+│   ├── session_manager.py
+│   └── state
+│       ├── __init__.py
+│       └── session_state.py
+├── spellcheck
+│   ├── __init__.py
+│   ├── checker.py
+│   └── adapters
+│       ├── __init__.py
+│       └── language_tool.py
+├── utils
+│   ├── html_utils.py
+│   └── validator.py
 ├── tests   #test部分结构与src基本照应，不再完整写出
 │   ├── application
 │   ├── commands
@@ -85,7 +102,7 @@ pytest tests/io/                # Test I/O functionality
 pytest tests/spellcheck/        # Test spell checking
 pytest -m unit                  # Run unit tests
 pytest -m integration           # Run integration tests
-pytest --cov=src tests/         # Generate test coverage report
+pytest --cov=. tests/         # Generate test coverage report
 ```
 
 ## Test Coverage Report | Overall Coverage: 90%
@@ -101,49 +118,46 @@ pytest --cov . >test_out.txt
 | cleanup_cache.py                                   |     0     |   0   |   100%   |
 | conftest.py                                        |     13     |   0   |   100%   |
 | main.py                                            |    161    |   30   |   81%   |
-| src\__init__.py                                  |     0     |   0   |   100%   |
-| src\application\__init__.py                      |     0     |   0   |   100%   |
-| src\application\command_parser.py                  |     87     |   47   |   46%   |
-| src\commands\__init__.py                         |     0     |   0   |   100%   |
-| src\commands\base.py                               |     59     |   8   |   86%   |
-| src\commands\command_exceptions.py                 |     9     |   1   |   89%   |
-| src\commands\display\__init__.py                 |     0     |   0   |   100%   |
-| src\commands\display\base.py                       |     0     |   0   |   100%   |
-| src\commands\display\dir_tree.py                   |     0     |   0   |   100%   |
-| src\commands\display\print_tree.py                 |     0     |   0   |   100%   |
-| src\commands\display\spell_check.py                |     0     |   0   |   100%   |
-| src\commands\display.py                            |    145    |   19   |   87%   |
-| src\commands\edit\__init__.py                    |     6     |   0   |   100%   |
-| src\commands\edit\append_command.py                |     52     |   4   |   92%   |
-| src\commands\edit\delete_command.py                |     48     |   5   |   90%   |
-| src\commands\edit\edit_id_command.py               |     56     |   11   |   80%   |
-| src\commands\edit\edit_text_command.py             |     40     |   7   |   82%   |
-| src\commands\edit\insert_command.py                |     73     |   17   |   77%   |
-| src\commands\io\__init__.py                      |     0     |   0   |   100%   |
-| src\commands\io\init.py                            |     0     |   0   |   100%   |
-| src\commands\io\read.py                            |     0     |   0   |   100%   |
-| src\commands\io\save.py                            |     0     |   0   |   100%   |
-| src\commands\io.py                                 |    120    |   27   |   78%   |
-| src\commands\observer.py                           |     5     |   1   |   80%   |
-| src\core\__init__.py                             |     0     |   0   |   100%   |
-| src\core\element.py                                |     48     |   17   |   65%   |
-| src\core\exceptions.py                             |     20     |   2   |   90%   |
-| src\core\html_element.py                           |     0     |   0   |   100%   |
-| src\core\html_model.py                             |     96     |   28   |   71%   |
-| src\core\html_writer.py                            |     0     |   0   |   100%   |
-| src\io\__init__.py                               |     0     |   0   |   100%   |
-| src\io\html_writer.py                              |     0     |   0   |   100%   |
-| src\io\parser.py                                   |    125    |   48   |   62%   |
-| src\io\writer.py                                   |     47     |   17   |   64%   |
-| src\main.py                                        |    126    |   70   |   44%   |
-| src\session_manager.py                             |    203    |   19   |   91%   |
-| src\spellcheck\__init__.py                       |     0     |   0   |   100%   |
-| src\spellcheck\adapters\__init__.py              |     0     |   0   |   100%   |
-| src\spellcheck\adapters\language_tool.py           |     10     |   8   |   20%   |
-| src\spellcheck\checker.py                          |     79     |   20   |   75%   |
-| src\state\__init__.py                            |     0     |   0   |   100%   |
-| src\state\session_state.py                         |     39     |   4   |   90%   |
-| src\utils\html_utils.py                            |     9     |   6   |   33%   |
+| __init__.py                                      |     0     |   0   |   100%   |
+| application\__init__.py                      |     0     |   0   |   100%   |
+| application\command_parser.py                  |     87     |   47   |   46%   |
+| commands\__init__.py                         |     0     |   0   |   100%   |
+| commands\base.py                               |     59     |   8   |   86%   |
+| commands\command_exceptions.py                 |     9     |   1   |   89%   |
+| commands\display\__init__.py                 |     0     |   0   |   100%   |
+| commands\display\base.py                       |     0     |   0   |   100%   |
+| commands\display\dir_tree.py                   |     0     |   0   |   100%   |
+| commands\display\print_tree.py                 |     0     |   0   |   100%   |
+| commands\display\spell_check.py                |     0     |   0   |   100%   |
+| commands\display.py                            |    145    |   19   |   87%   |
+| commands\edit\__init__.py                    |     6     |   0   |   100%   |
+| commands\edit\append_command.py                |     52     |   4   |   92%   |
+| commands\edit\delete_command.py                |     48     |   5   |   90%   |
+| commands\edit\edit_id_command.py               |     56     |   11   |   80%   |
+| commands\edit\edit_text_command.py             |     40     |   7   |   82%   |
+| commands\edit\insert_command.py                |     73     |   17   |   77%   |
+| commands\io\__init__.py                      |     0     |   0   |   100%   |
+| commands\io\init.py                            |     0     |   0   |   100%   |
+| commands\io\read.py                            |     0     |   0   |   100%   |
+| commands\io\save.py                            |     0     |   0   |   100%   |
+| commands\io.py                                 |    120    |   27   |   78%   |
+| commands\observer.py                           |     5     |   1   |   80%   |
+| core\__init__.py                             |     0     |   0   |   100%   |
+| core\element.py                                |     48     |   17   |   65%   |
+| core\exceptions.py                             |     20     |   2   |   90%   |
+| core\html_model.py                             |     96     |   28   |   71%   |
+| io\__init__.py                               |     0     |   0   |   100%   |
+| io\parser.py                                   |    125    |   48   |   62%   |
+| io\writer.py                                   |     47     |   17   |   64%   |
+| session\session_manager.py                     |    203    |   19   |   91%   |
+| session\state\__init__.py                    |     0     |   0   |   100%   |
+| session\state\session_state.py                 |     39     |   4   |   90%   |
+| spellcheck\__init__.py                       |     0     |   0   |   100%   |
+| spellcheck\adapters\__init__.py              |     0     |   0   |   100%   |
+| spellcheck\adapters\language_tool.py           |     10     |   8   |   20%   |
+| spellcheck\checker.py                          |     79     |   20   |   75%   |
+| utils\html_utils.py                            |     9     |   6   |   33%   |
+| application\main.py                           |    126    |   70   |   44%   |
 | tests\__init__.py                                |     0     |   0   |   100%   |
 | tests\application\__init__.py                    |     0     |   0   |   100%   |
 | tests\application\test_command_parser.py           |     0     |   0   |   100%   |
@@ -157,7 +171,6 @@ pytest --cov . >test_out.txt
 | tests\commands\edit\test_edit_id_command.py        |    103    |   3   |   97%   |
 | tests\commands\edit\test_edit_text_command.py      |    104    |   1   |   99%   |
 | tests\commands\edit\test_insert_command.py         |     78     |   3   |   96%   |
-| tests\commands\file\test_read_command.py           |     0     |   0   |   100%   |
 | tests\commands\io\__init__.py                    |     0     |   0   |   100%   |
 | tests\commands\io\test_io.py                       |     0     |   0   |   100%   |
 | tests\commands\io\test_save_command.py             |     0     |   0   |   100%   |
@@ -167,6 +180,18 @@ pytest --cov . >test_out.txt
 | tests\core\test_html_model_comprehensive.py        |     0     |   0   |   100%   |
 | tests\core\test_parser.py                          |     0     |   0   |   100%   |
 | tests\html_utils\test_html_utils.py                |     0     |   0   |   100%   |
+
+## Available Commands
+
+### Edit Commands
+
+- **insert** `insert parent_id tag_name [id]` - Insert a new element as a child of parent_id
+- **append** `append element_id text` - Append text to an element
+- **delete** `delete element_id` - Delete an element
+- **edit-text** `edit-text element_id new_text` - Change element's text content
+- **edit-id** `edit-id old_id new_id` - Change element's ID
+
+### Display Commands
 
 - **print-tree** `print-tree` or `tree` - Display the current HTML in a tree structure
 - **spell-check** `spell-check` - Check for spelling errors in text content
