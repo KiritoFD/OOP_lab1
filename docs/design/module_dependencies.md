@@ -5,11 +5,13 @@
 ```
 core.element -> core.exceptions
 core.html_model -> core.element, core.exceptions
+core.style -> core.element
 ```
 
 - **core.element**: 定义HTML元素的基本结构
 - **core.exceptions**: 定义异常类型
 - **core.html_model**: 管理HTML文档树
+- **core.style**: 管理HTML样式
 
 ## 2. 命令依赖
 
@@ -18,12 +20,14 @@ commands.base -> core.html_model
 commands.edit_commands -> commands.base, core.html_model, core.element
 commands.display -> commands.base, core.html_model, core.element, spellcheck.*
 commands.io -> commands.base, core.html_model, io.*
+commands.style_commands -> commands.base, core.style
 ```
 
 - **commands.base**: 命令基类和处理器
 - **commands.edit_commands**: 编辑操作命令
 - **commands.display**: 显示相关命令
 - **commands.io**: 输入输出命令
+- **commands.style_commands**: 样式相关命令
 
 ## 3. I/O依赖
 
