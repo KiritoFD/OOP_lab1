@@ -1,54 +1,48 @@
-from typing import Optional
-from ..base import Command, CommandProcessor
+from src.commands.base import Command
 
 class UndoCommand(Command):
-    """Command that undoes the previous command"""
+    """撤销命令 - 撤销上一个操作"""
     
-    def __init__(self, processor: CommandProcessor):
-        """Initialize the undo command
+    def __init__(self, processor):
+        """
+        初始化撤销命令
         
         Args:
-            processor: The command processor that manages command history
+            processor: 命令处理器，用于获取可撤销的命令
         """
-        super().__init__()
         self.processor = processor
-        self.description = "Undo previous command"
-        # UndoCommand itself shouldn't be recorded in history
-        self.recordable = False
+        self.description = "撤销上一个操作"
+        self.recordable = False  # 撤销命令不应该被记录
         
-    def execute(self) -> bool:
-        """Execute the undo operation
+    def execute(self):
+        """
+        执行撤销操作
         
         Returns:
-            True if undo was successful, False if no command to undo
+            bool: 如果撤销成功返回True，否则返回False
         """
-        if not self.processor.command_history.history:
-            print("Nothing to undo")
-            return False
+        try:
+            # 直接调用处理器的undo方法，不再检查history
+            result = self.processor.undo()
             
-        # Get the last command from history
-        command = self.processor.command_history.pop_last_command()
-        
-        # Skip non-recordable commands
-        if not getattr(command, 'recordable', True):
-            # Put it back and try the next one recursively
-            self.processor.command_history.history.append(command)
-            return self.execute()
-        
-        # Perform the undo operation
-        if command.undo():
-            # Add to redos for potential redo operations
-            self.processor.command_history.add_to_redos(command)
-            # Notify observers about the undo
-            self.processor._notify_observers('undo', command=command)
-            print(f"Undid: {getattr(command, 'description', 'Command')}")
-            return True
-        else:
-            # If undo fails, put command back in history
-            self.processor.command_history.history.append(command)
-            print("Failed to undo command")
+            if result:
+                print(f"已撤销: 上一个操作")
+                return True
+            else:
+                print("没有可撤销的命令")
+                return False
+        except Exception as e:
+            print(f"撤销时发生错误: {str(e)}")
             return False
     
-    def undo(self) -> bool:
-        """UndoCommand doesn't support being undone itself"""
+    def undo(self):
+        """撤销命令不支持撤销"""
         return False
+        
+    def redo(self):
+        """撤销命令不支持重做"""
+        return False
+        
+    def __str__(self):
+        """返回命令的字符串表示"""
+        return f"UndoCommand: {self.description}"

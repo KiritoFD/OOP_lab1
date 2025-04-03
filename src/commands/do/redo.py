@@ -1,54 +1,68 @@
-from typing import Optional
-from ..base import Command, CommandProcessor
+from src.commands.base import Command
 
 class RedoCommand(Command):
-    """Command that redoes the previously undone command"""
+    """重做命令 - 重做上一个被撤销的操作"""
     
-    def __init__(self, processor: CommandProcessor):
-        """Initialize the redo command
+    def __init__(self, processor):
+        """
+        初始化重做命令
         
         Args:
-            processor: The command processor that manages command history
+            processor: 命令处理器，用于获取可重做的命令
         """
-        super().__init__()
         self.processor = processor
-        self.description = "Redo previously undone command"
-        # RedoCommand itself shouldn't be recorded in history
-        self.recordable = False
+        self.description = "重做上一个操作"
+        self.recordable = False  # 重做命令不应该被记录
         
-    def execute(self) -> bool:
-        """Execute the redo operation
+    def execute(self):
+        """
+        执行重做操作
         
         Returns:
-            True if redo was successful, False if no command to redo
+            bool: 如果重做成功返回True，否则返回False
         """
-        if not self.processor.command_history.redos:
-            print("Nothing to redo")
-            return False
-            
-        # Get the last undone command
-        command = self.processor.command_history.pop_last_redo()
-        
-        # Skip non-recordable commands
-        if not getattr(command, 'recordable', True):
-            # Put it back and try the next one recursively
-            self.processor.command_history.redos.append(command)
-            return self.execute()
-        
-        # Re-execute the command
-        if command.execute():
-            # Add back to history
-            self.processor.command_history.history.append(command)
-            # Notify observers about the redo
-            self.processor._notify_observers('redo', command=command)
-            print(f"Redid: {getattr(command, 'description', 'Command')}")
-            return True
-        else:
-            # If redo fails, the command stays in redos list
-            self.processor.command_history.redos.append(command)
-            print("Failed to redo command")
+        try:
+            # 直接调用处理器的redo方法
+            if not hasattr(self.processor, 'redo'):
+                print("处理器没有实现redo方法")
+                return False
+                
+            # 检查是否可以重做
+            if hasattr(self.processor.history, '_commands') and hasattr(self.processor.history, '_position'):
+                if self.processor.history._position >= len(self.processor.history._commands) - 1:
+                    print("没有可重做的命令")
+                    return False
+                
+                # 获取将要重做的命令
+                next_cmd = self.processor.history._commands[self.processor.history._position + 1]
+                cmd_desc = next_cmd.description if hasattr(next_cmd, 'description') else "上一个操作"
+                
+                # 执行重做
+                result = self.processor.redo()
+                if result:
+                    print(f"已重做: {cmd_desc}")
+                    return True
+                else:
+                    print("重做失败")
+                    return False
+            else:
+                # 没有明确的可重做状态检查，尝试直接重做并检查结果
+                result = self.processor.redo()
+                if result:
+                    print("已重做: 上一个操作")
+                    return True
+                else:
+                    print("没有可重做的命令")
+                    return False
+                
+        except Exception as e:
+            print(f"重做时发生错误: {str(e)}")
             return False
     
-    def undo(self) -> bool:
-        """RedoCommand doesn't support being undone itself"""
+    def undo(self):
+        """重做命令不支持撤销"""
         return False
+        
+    def __str__(self):
+        """返回命令的字符串表示"""
+        return f"RedoCommand: {self.description}"
