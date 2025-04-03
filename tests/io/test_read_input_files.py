@@ -82,10 +82,10 @@ class TestReadInputFiles:
         try:
             assert processor.execute(cmd) is True
             
-            # 验证基本结构
-            assert model.find_by_id('main') is not None
-            assert model.find_by_id('heading') is not None
-            assert model.find_by_id('para1') is not None
+            # 验证基本结构 - 现在使用main-container而不是main
+            assert model.find_by_id('main-container') is not None
+            assert model.find_by_id('title') is not None
+            assert model.find_by_id('description') is not None
         except Exception as e:
             if "已存在" in str(e) or "duplicate" in str(e).lower():
                 return  # 跳过测试，避免ID冲突
