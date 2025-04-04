@@ -83,3 +83,7 @@ class HelpCommand(Command):
         print("  edit-text heading '新的标题内容'")
         print("  append p para2 main '新增的第二个段落'")
         print("  save")
+        
+    def __str__(self):
+        """返回命令的字符串表示"""
+        return self.description

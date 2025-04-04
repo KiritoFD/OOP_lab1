@@ -38,3 +38,7 @@ class ExitCommand(Command):
     def undo(self):
         """撤销退出命令（不可能执行）"""
         return False
+        
+    def __str__(self):
+        """返回命令的字符串表示"""
+        return self.description
