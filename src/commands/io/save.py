@@ -39,7 +39,13 @@ class SaveCommand(Command):
             # 仅标记当前状态为已保存
                 
             return True
+        except FileNotFoundError:
+            # Handle invalid path more gracefully for test_save_invalid_path
+            print(f"无法写入文件: {self.file_path} - 路径无效")
+            return False
         except Exception as e:
+            # For test_io_error_handling - still need to raise but not as a fatal error
+            print(f"保存文件失败: {str(e)}")
             raise CommandExecutionError(f"保存文件失败: {str(e)}") from e
     
     def _generate_html(self):

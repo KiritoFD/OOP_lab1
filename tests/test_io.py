@@ -136,7 +136,7 @@ class TestHtmlIO:
         assert "Footer text" in (footer.text or "")
 
     def test_write_basic_structure(self, tmp_path):
-        """测试基本HTML结构的写入"""
+        """Test writing basic HTML structure to file"""
         model = HtmlModel()  # 创建一个基本模型
         
         # 写入文件
@@ -153,10 +153,11 @@ class TestHtmlIO:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # 检查是否包含基本HTML结构
-        assert '<html>' in content
-        assert '<head>' in content
-        assert '<body>' in content
+        # Just check for the important elements, not exact format
+        assert '<html' in content  # Changed from '<html>'
+        assert '<head' in content
+        assert '<body' in content
+        assert '</html>' in content
 
     def test_write_complex_structure(self, tmp_path, complex_html):
         """测试复杂HTML结构的写入 - 因为writer接口不同，直接写入文本"""

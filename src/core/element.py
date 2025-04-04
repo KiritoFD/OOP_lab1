@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from abc import ABC, abstractmethod
+from .exceptions import InvalidOperationError
 
 class HtmlVisitor(ABC):
     """访问者接口"""
@@ -8,44 +9,106 @@ class HtmlVisitor(ABC):
         pass
 
 class HtmlElement:
-    """HTML元素基类"""
-    def __init__(self, tag: str, id: str = None):
+    """HTML元素类"""
+    
+    def __init__(self, tag, id):
+        """初始化HTML元素"""
         self.tag = tag
-        self.id = id or tag
-        self.text = None
-        self.children: List[HtmlElement] = []
-        self.parent: Optional[HtmlElement] = None
-        self.attributes: Dict[str, str] = {}  # 添加属性字典
-        
-    def add_child(self, child: 'HtmlElement') -> bool:
-        """添加子元素"""
-        if not child:
-            return False
+        self.id = id
+        self.children = []
+        self.parent = None
+        self.attributes = {}
+        self.text = ''  # Initialize as empty string, not None
+    
+    def add_child(self, child):
+        """添加子元素，并处理父子关系"""
+        # 检查是否试图添加元素自身
+        if child == self:
+            raise InvalidOperationError(f"不能将元素自身添加为子元素: {self.id}")
             
-        # 如果子元素已经在正确位置，直接返回成功
-        if child in self.children and child.parent is self:
-            return True
+        # 检查是否形成循环引用 - 修正实现
+        if child.is_ancestor_of(self):
+            raise InvalidOperationError(f"循环引用: 元素 {self.id} 已经是 {child.id} 的后代")
             
-        # 如果子元素已有父元素，先移除
+        # 如果子元素已有父元素，先从原父元素中移除
         if child.parent:
-            child.parent.children.remove(child)
+            child.parent.remove_child(child)
             
-        # 设置新的父子关系
+        # 建立父子关系
+        self.children.append(child)
         child.parent = self
-        if child not in self.children:
-            self.children.append(child)
-            
-        return True
         
-    def remove_child(self, child: 'HtmlElement') -> bool:
-        """移除子元素"""
-        if child not in self.children:
+    def remove_child(self, child):
+        """移除子元素，解除父子关系"""
+        if child in self.children:
+            self.children.remove(child)
+            child.parent = None
+            return True
+        return False
+        
+    def set_attribute(self, name, value):
+        """设置元素属性"""
+        self.attributes[name] = value
+        
+    def get_attribute(self, name, default=None):
+        """获取元素属性值，不存在时返回默认值"""
+        return self.attributes.get(name, default)
+        
+    def remove_attribute(self, name):
+        """移除元素属性"""
+        if name in self.attributes:
+            del self.attributes[name]
+            
+    def has_attribute(self, name):
+        """检查是否存在指定属性"""
+        return name in self.attributes
+        
+    def copy(self, deep=False):
+        """
+        复制元素
+        
+        Args:
+            deep: 是否深度复制（包括子元素）
+            
+        Returns:
+            复制的元素
+        """
+        # 创建新元素
+        new_element = HtmlElement(self.tag, self.id)
+        new_element.text = self.text
+        new_element.attributes = self.attributes.copy()
+        
+        # 如果需要深度复制，递归复制所有子元素
+        if deep:
+            for child in self.children:
+                child_copy = child.copy(deep=True)
+                new_element.add_child(child_copy)
+                
+        return new_element
+        
+    def is_ancestor_of(self, element):
+        """检查当前元素是否是指定元素的祖先"""
+        if element is None or element == self:
             return False
             
-        # 解除父子关系
-        child.parent = None
-        self.children.remove(child)
-        return True
+        current = element.parent
+        while current:
+            if current == self:
+                return True
+            current = current.parent
+        
+        return False
+        
+    def get_parent_chain(self):
+        """获取从当前元素到根元素的父元素链"""
+        chain = []
+        parent = self.parent
+        
+        while parent:
+            chain.append(parent)
+            parent = parent.parent
+            
+        return chain
 
     def accept(self, visitor: HtmlVisitor) -> None:
         """访问者模式接口"""
@@ -74,12 +137,3 @@ class HtmlElement:
                 return result
                 
         return None
-        
-    # 添加属性管理方法
-    def get_attribute(self, name: str) -> Optional[str]:
-        """获取属性值"""
-        return self.attributes.get(name)
-        
-    def set_attribute(self, name: str, value: str) -> None:
-        """设置属性值"""
-        self.attributes[name] = value
