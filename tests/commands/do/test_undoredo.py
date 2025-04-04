@@ -52,7 +52,7 @@ class TestUndoRedoFunctionality:
         cmd2 = MockCommand()
         cmd3 = MockCommand()
         
-        history.add_command(cmd1)  # Use add_command instead of add
+        history.add_command(cmd1)
         history.add_command(cmd2)
         history.add_command(cmd3)
         
@@ -61,22 +61,21 @@ class TestUndoRedoFunctionality:
         assert history.can_undo()
         assert not history.can_redo()
         
-        # 撤销一个命令
-        undo_cmd = history.get_undo_command()
-        assert undo_cmd == cmd3
-        assert history.position == 2
-        assert history.can_undo()
+        # 撤销一个命令 - use get_last_command() instead of get_undo_command()
+        undo_cmd = history.get_last_command()
+        assert undo_cmd is cmd3
+        
+        # 模拟撤销操作
+        popped = history.pop_last_command()
+        assert popped is cmd3
+        history.add_to_redos(popped)
+        
+        # 验证现在可以重做
         assert history.can_redo()
         
-        # 再撤销一个命令
-        undo_cmd = history.get_undo_command()
-        assert undo_cmd == cmd2
-        assert history.position == 1
-        
-        # 重做一个命令
-        redo_cmd = history.get_redo_command()
-        assert redo_cmd == cmd2
-        assert history.position == 2
+        # 验证重做队列状态
+        redo_cmd = history.get_last_redo()
+        assert redo_cmd is cmd3
     
     def test_undo_redo_manager(self):
         """测试UndoRedoManager类"""

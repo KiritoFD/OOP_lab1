@@ -75,16 +75,21 @@ class CommandProcessor:
         if not command:
             return False
         
-        # 尝试使用redo方法，如果没有则使用execute
-        if hasattr(command, 'redo') and callable(getattr(command, 'redo')):
-            result = command.redo()
-        else:
-            result = command.execute()
-            
-        if result:
-            self.history.add_command(command)
-            
-        return result
+        # Try to use redo method if it exists, otherwise use execute
+        try:
+            if hasattr(command, 'redo') and callable(getattr(command, 'redo')):
+                result = command.redo()
+            else:
+                result = command.execute()
+                
+            if result:
+                # Make sure to append to history AFTER successful execution
+                self.history.add_command(command)
+                
+            return result
+        except Exception as e:
+            print(f"Error redoing command: {e}")
+            return False
         
     def clear_history(self):
         """清空命令历史"""

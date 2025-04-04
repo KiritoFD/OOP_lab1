@@ -121,24 +121,32 @@ class HtmlModel:
             
     def delete_element(self, element_id: str) -> bool:
         """删除指定元素"""
-        element = self.find_by_id(element_id)
+        try:
+            element = self.find_by_id(element_id)
+        except ElementNotFoundError:
+            return False
+        
         if not element or not element.parent:
             return False
-            
+        
+        # 递归注销所有子元素的ID - do this BEFORE removing from parent
+        self._unregister_subtree_ids(element)
+        
+        # 从父元素中移除
         try:
-            # 递归注销所有子元素的ID
-            self._unregister_subtree_ids(element)
-            
-            # 从父元素中移除
             return element.parent.remove_child(element)
-            
         except Exception as e:
             print(f"删除元素时发生错误: {str(e)}")
             return False
             
     def _unregister_subtree_ids(self, root: HtmlElement) -> None:
         """递归注销子树中所有元素的ID"""
-        for child in root.children:
+        # Need to handle the root element itself first
+        if root.id in self._id_map:
+            self._unregister_id(root)
+        
+        # Then process all children - use a copy of children to avoid modification during iteration
+        for child in list(root.children):
             if child.id:
                 self._unregister_id(child)
             self._unregister_subtree_ids(child)

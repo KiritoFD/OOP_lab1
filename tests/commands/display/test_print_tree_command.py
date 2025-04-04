@@ -2,12 +2,14 @@ import pytest
 import os
 from io import StringIO
 from bs4 import BeautifulSoup
+from unittest.mock import patch, MagicMock
 from src.core.html_model import HtmlModel
 from src.core.element import HtmlElement
 from src.commands.display import PrintTreeCommand
 from src.commands.base import CommandProcessor
 from src.commands.edit.append_command import AppendCommand
 from src.core.exceptions import ElementNotFoundError
+from src.spellcheck.checker import SpellChecker, SpellError
 
 class TestPrintTreeCommand:
     def get_project_root(self):
@@ -19,7 +21,17 @@ class TestPrintTreeCommand:
     @pytest.fixture
     def model(self):
         """创建测试用的HTML模型"""
-        return HtmlModel()
+        model = HtmlModel()
+        
+        # 添加一些内容用于测试
+        model.append_child('body', 'div', 'container')
+        model.append_child('container', 'h1', 'title', 'Page Title')
+        model.append_child('container', 'p', 'paragraph', 'Some text with a misspeling.')
+        model.append_child('container', 'ul', 'list')
+        model.append_child('list', 'li', 'item1', 'First item')
+        model.append_child('list', 'li', 'item2', 'Second item')
+        
+        return model
     
     @pytest.fixture
     def processor(self):
@@ -300,3 +312,248 @@ class TestPrintTreeCommand:
         # 更新断言以匹配实际输出格式
         assert '<p>' in output or '<p ' in output  # 至少应该有段落元素
         assert '<div>' in output or '<div ' in output  # 至少应该有div元素
+    
+    def test_init(self, model):
+        """测试初始化"""
+        # 测试默认参数
+        cmd = PrintTreeCommand(model)
+        assert cmd.model == model
+        assert cmd.show_id is True
+        assert cmd.check_spelling is False
+        assert cmd.description == "显示HTML树形结构"
+        assert cmd.recordable is False
+        
+        # 测试自定义参数
+        cmd = PrintTreeCommand(model, show_id=False, check_spelling=True)
+        assert cmd.show_id is False
+        assert cmd.check_spelling is True
+        assert cmd.spell_checker is not None
+    
+    @patch('builtins.print')
+    def test_execute_basic(self, mock_print, model):
+        """测试基本执行功能"""
+        cmd = PrintTreeCommand(model)
+        result = cmd.execute()
+        
+        # 验证执行成功
+        assert result is True
+        
+        # 验证打印调用
+        mock_print.assert_any_call("HTML树形结构:")
+        
+        # 检查输出包含基本HTML结构
+        output_text = ' '.join([str(args[0]) for args, _ in mock_print.call_args_list])
+        assert '<html>' in output_text
+        assert '<head>' in output_text
+        assert '<body>' in output_text
+        assert '<div>' in output_text
+        assert '<h1>' in output_text
+        assert '<p>' in output_text
+        assert '<ul>' in output_text
+        assert '<li>' in output_text
+    
+    @patch('builtins.print')
+    def test_execute_with_ids(self, mock_print, model):
+        """测试显示ID的功能"""
+        cmd = PrintTreeCommand(model, show_id=True)
+        cmd.execute()
+        
+        # 验证输出包含ID
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        id_lines = [line for line in output_lines if '#' in line]
+        
+        # 检查特定ID是否显示
+        assert any('#container' in line for line in id_lines)
+        assert any('#title' in line for line in id_lines)
+        assert any('#paragraph' in line for line in id_lines)
+        assert any('#list' in line for line in id_lines)
+        assert any('#item1' in line for line in id_lines)
+        assert any('#item2' in line for line in id_lines)
+    
+    @patch('builtins.print')
+    def test_execute_without_ids(self, mock_print, model):
+        """测试不显示ID的功能"""
+        cmd = PrintTreeCommand(model, show_id=False)
+        cmd.execute()
+        
+        # 验证输出不包含ID
+        output_text = ' '.join([str(args[0]) for args, _ in mock_print.call_args_list])
+        assert '#container' not in output_text
+        assert '#title' not in output_text
+        assert '#paragraph' not in output_text
+        assert '#list' not in output_text
+        assert '#item1' not in output_text
+        assert '#item2' not in output_text
+    
+    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('builtins.print')
+    def test_execute_with_spelling_check(self, mock_print, mock_check_text, model):
+        """测试拼写检查功能"""
+        # 模拟拼写检查结果
+        mock_check_text.side_effect = lambda text: (
+            [SpellError('misspeling', ['misspelling'], text, 0, 10)]
+            if 'misspeling' in text
+            else []
+        )
+        
+        cmd = PrintTreeCommand(model, check_spelling=True)
+        cmd.execute()
+        
+        # 验证输出中包含拼写错误标记
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        marked_lines = [line for line in output_lines if '[X]' in line]
+        
+        # 检查包含拼写错误的段落是否被标记
+        assert any('<p>' in line and '[X]' in line for line in marked_lines)
+        
+        # 检查其他元素没有被错误标记
+        assert not any('<h1>' in line and '[X]' in line for line in output_lines)
+        assert not any('<li>' in line and '[X]' in line for line in output_lines)
+    
+    @patch('builtins.print')
+    def test_print_node_formatting(self, mock_print, model):
+        """测试节点格式化和缩进"""
+        cmd = PrintTreeCommand(model)
+        cmd.execute()
+        
+        # 获取所有输出行
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        
+        # 检查缩进格式是否正确
+        indent_levels = {}
+        for line in output_lines:
+            if '└── ' in line or '├── ' in line:
+                tag_start = line.find('<')
+                if tag_start > 0:
+                    tag_name = line[tag_start:].split()[0].strip('<>')
+                    indent = line.find('└──' if '└──' in line else '├──')
+                    indent_levels[tag_name] = indent
+        
+        # 验证子元素缩进比父元素更深
+        if 'div' in indent_levels and 'h1' in indent_levels:
+            assert indent_levels['h1'] > indent_levels['div']
+        if 'ul' in indent_levels and 'li' in indent_levels:
+            assert indent_levels['li'] > indent_levels['ul']
+    
+    def test_undo_returns_false(self, model):
+        """测试undo方法总是返回False"""
+        cmd = PrintTreeCommand(model)
+        assert cmd.undo() is False
+    
+    @patch('builtins.print')
+    def test_empty_model(self, mock_print):
+        """测试空模型的情况"""
+        # 创建只有基本结构的模型
+        empty_model = HtmlModel()
+        
+        cmd = PrintTreeCommand(empty_model)
+        cmd.execute()
+        
+        # 验证输出仅包含基本结构
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        html_tags = [line for line in output_lines if '<html>' in line]
+        head_tags = [line for line in output_lines if '<head>' in line]
+        body_tags = [line for line in output_lines if '<body>' in line]
+        
+        assert len(html_tags) == 1
+        assert len(head_tags) == 1
+        assert len(body_tags) == 1
+    
+    @patch('builtins.print')
+    def test_complex_nested_structure(self, mock_print):
+        """测试复杂嵌套结构"""
+        model = HtmlModel()
+        
+        # 创建深层嵌套结构
+        model.append_child('body', 'div', 'level1')
+        model.append_child('level1', 'div', 'level2')
+        model.append_child('level2', 'div', 'level3')
+        model.append_child('level3', 'div', 'level4')
+        model.append_child('level4', 'p', 'deep-text', 'Deeply nested text')
+        
+        cmd = PrintTreeCommand(model)
+        cmd.execute()
+        
+        # 验证所有级别都被正确打印
+        output_text = ' '.join([str(args[0]) for args, _ in mock_print.call_args_list])
+        assert '#level1' in output_text
+        assert '#level2' in output_text
+        assert '#level3' in output_text
+        assert '#level4' in output_text
+        assert '#deep-text' in output_text
+    
+    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('builtins.print')
+    def test_spelling_check_with_multiple_errors(self, mock_print, mock_check_text, model):
+        """测试多个拼写错误的情况"""
+        # 添加一个包含多个拼写错误的元素
+        model.append_child('container', 'p', 'multi-errors', 'Multiple errrors and misstakes here.')
+        
+        # 模拟拼写检查结果
+        mock_check_text.side_effect = lambda text: (
+            [
+                SpellError('errrors', ['errors'], text, 9, 16),
+                SpellError('misstakes', ['mistakes'], text, 21, 30)
+            ]
+            if 'errrors' in text
+            else (
+                [SpellError('misspeling', ['misspelling'], text, 0, 10)]
+                if 'misspeling' in text
+                else []
+            )
+        )
+        
+        cmd = PrintTreeCommand(model, check_spelling=True)
+        cmd.execute()
+        
+        # 验证输出中包含拼写错误标记
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        marked_lines = [line for line in output_lines if '[X]' in line]
+        
+        # 应该有两个带有错误标记的段落
+        p_with_errors = [line for line in marked_lines if '<p>' in line]
+        assert len(p_with_errors) == 2
+    
+    @patch('builtins.print')
+    def test_branch_symbols(self, mock_print, model):
+        """测试树形图中的分支符号"""
+        # 在容器中添加更多元素以测试分支符号
+        model.append_child('container', 'div', 'extra1')
+        model.append_child('container', 'div', 'extra2')
+        model.append_child('container', 'div', 'last-item')
+        
+        cmd = PrintTreeCommand(model)
+        cmd.execute()
+        
+        # 获取输出行
+        output_lines = [str(args[0]) for args, _ in mock_print.call_args_list]
+        
+        # 检查分支符号
+        # 非最后元素应该使用 ├── 
+        # 最后元素应该使用 └── 
+        branches = []
+        for line in output_lines:
+            if '├── ' in line:
+                branches.append('middle')
+            elif '└── ' in line:
+                branches.append('last')
+                
+        # 应该同时有中间分支和末端分支
+        assert 'middle' in branches
+        assert 'last' in branches
+        
+        # 获取container的子元素行
+        container_children = []
+        recording = False
+        for line in output_lines:
+            if '#container' in line:
+                recording = True
+                continue
+            if recording and ('├── ' in line or '└── ' in line):
+                container_children.append(line)
+            if recording and '└── ' in line and '#last-item' in line:
+                # 最后一个元素之后停止记录
+                break
+                
+        # 验证最后一个元素使用了末端分支符号
+        assert any('└── ' in line and '#last-item' in line for line in container_children)

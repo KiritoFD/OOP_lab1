@@ -73,8 +73,9 @@ class TestHtmlModel:
         
     def test_remove_nonexistent_element(self, model):
         """测试删除不存在的元素"""
-        with pytest.raises(ElementNotFoundError):
-            model.delete_element('nonexistent')
+        # delete_element should return False for nonexistent elements rather than raising an exception
+        result = model.delete_element('nonexistent')
+        assert result is False
         
     def test_element_hierarchy(self, model):
         """测试元素层级关系"""
