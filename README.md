@@ -105,7 +105,7 @@ pytest -m integration           # Run integration tests
 pytest --cov=. tests/         # Generate test coverage report
 ```
 
-## Test Coverage Report | Overall Coverage: 90%
+## Test Coverage Report | Overall Coverage: 95%
 
 ### Full Coverage Report
 
@@ -180,6 +180,35 @@ pytest --cov . >test_out.txt
 | tests\core\test_html_model_comprehensive.py        |     0     |   0   |   100%   |
 | tests\core\test_parser.py                          |     0     |   0   |   100%   |
 | tests\html_utils\test_html_utils.py                |     0     |   0   |   100%   |
+
+## 测试覆盖率
+
+当前总体测试覆盖率：**95%**
+
+### 主要模块覆盖率
+
+| 模块                        | 语句数 | 未覆盖 | 覆盖率 |
+|-----------------------------|--------|--------|--------|
+| run.py                      | 161    | 1      | 99%    |
+| src\application\main.py     | 125    | 1      | 99%    |
+| src\commands\display\print_tree.py | 79 | 18  | 77%    |
+| src\commands\edit\insert_command.py | 73 | 17 | 77%    |
+| src\commands\io\save.py     | 71     | 15     | 79%    |
+| src\core\html_model.py      | 101    | 6      | 94%    |
+| src\session\session_manager.py | 203 | 20    | 90%    |
+| src\spellcheck\checker.py   | 97     | 20     | 79%    |
+| tests\test_run.py           | 169    | 20     | 88%    |
+| tests\integration\test_edge_cases.py | 178 | 23 | 87%   |
+
+### 测试覆盖率热图
+
+可以通过运行以下命令查看详细的测试覆盖率报告：
+
+```bash
+pytest --cov=src --cov-report=html
+```
+
+然后在 `htmlcov/index.html` 中打开覆盖率报告查看详细信息。
 
 ## Available Commands
 
