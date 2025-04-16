@@ -1,13 +1,14 @@
-@startuml HTML编辑器类图
-
+@startuml html_editor
+left to right direction
 skinparam packageStyle rectangle
-skinparam classAttributeIconSize 0
+skinparam nodesep 40
+skinparam ranksep 50
 skinparam linetype ortho
-skinparam shadowing false
-skinparam monochrome true
+skinparam padding 5
+skinparam defaultTextAlignment center
 
-' 核心模块
-package core {
+' 核心模块放在顶部中央
+package core #DDFFDD {
     class HtmlElement {
         - tag: String
         - id: String
@@ -45,8 +46,116 @@ package core {
     HtmlElement ..> HtmlVisitor : accepts >
 }
 
-' 命令模块
-package commands {
+' 两侧并排的辅助模块
+together {
+    ' 左侧的IO、工具和拼写检查模块
+    package io #DDDDFF {
+        class HtmlParser {
+            + parse(html_content: String, model: HtmlModel): void
+            + parse_string(html_content: String, model: HtmlModel): HtmlElement
+            + parse_file(file_path: String, model: HtmlModel): HtmlElement
+            - _create_element_tree(soup_element): HtmlElement
+            - _register_element_ids(element: HtmlElement, model: HtmlModel): void
+        }
+    }
+    
+    package utils #FFFFDD {
+        class HtmlValidator {
+            {static} + validate_model(model: HtmlModel): Boolean
+            {static} + validate_element(element: HtmlElement): Boolean
+            {static} + collect_ids(element: HtmlElement, id_set: Set): void
+        }
+    }
+    
+    package spellcheck #FFEEDD {
+        class SpellChecker {
+            - language_tool
+            - cache: Dict
+            + check_text(text: String): List<SpellError>
+            + get_suggestions(word: String): List<String>
+        }
+
+        class SpellError {
+            + word: String
+            + suggestions: List<String>
+            + context: String
+            + start_pos: Integer
+            + end_pos: Integer
+        }
+        
+        SpellChecker ..> SpellError : creates >
+    }
+
+    ' 右侧的会话和应用层模块
+    package session #DDEEFF {
+        class Editor {
+            + filename: String
+            + model: HtmlModel
+            + processor: CommandProcessor
+            + modified: Boolean
+            + show_id: Boolean
+            + load(): Boolean
+            + save(): Boolean
+            + execute_command(command: Command): Boolean
+            + undo(): Boolean
+            + redo(): Boolean
+            + save_as(new_filename: String): Boolean
+        }
+
+        class SessionManager {
+            - editors: Dict
+            + active_editor: Editor
+            - state_manager: SessionState
+            + restore_session(): Boolean
+            + save_session(): Boolean
+            + load(filename: String): Boolean
+            + save(filename: String): Boolean
+            + close(): Boolean
+            + editor_list(): void
+            + set_show_id(show: Boolean): Boolean
+            + get_show_id(): Boolean
+            + execute_command(command: Command): Boolean
+            + get_active_model(): HtmlModel
+            + get_active_processor(): CommandProcessor
+        }
+
+        class SessionState {
+            - state_file: String
+            + load_state(): Dict
+            + save_state(files: List, active: String, settings: Dict): Boolean
+        }
+
+        SessionManager "1" o-- "*" Editor : editors >
+        SessionManager "1" o-- "1" SessionState
+        Editor "1" *-- "1" HtmlModel
+    }
+    
+    package application #FFDDDD {
+        class Application {
+            - session_manager: SessionManager
+            - model: HtmlModel
+            - processor: CommandProcessor
+            - parser: CommandParser
+            - running: Boolean
+            + run(): void
+            + print_help(): void
+            + on_command_event(event_type: String, kwargs: Dict): void
+        }
+
+        class CommandParser {
+            - processor: CommandProcessor
+            - model: HtmlModel
+            + parse(command_line: String): Command
+        }
+
+        Application "1" *-- "1" SessionManager
+        Application "1" *-- "1" CommandParser
+        Application ..|> CommandObserver
+    }
+}
+
+' 命令模块放在底部，水平分布
+package commands #FFDDFF {
     abstract class Command {
         # model: HtmlModel
         # recordable: Boolean
@@ -70,211 +179,108 @@ package commands {
         + on_command_event(event_type: String, kwargs: Dict): void
     }
 
-    package edit {
-        class AppendCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class DeleteCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class EditTextCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class EditIdCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class InsertCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-    }
-
-    package display {
-        class PrintTreeCommand {
-            - show_id: Boolean
-            - check_spelling: Boolean
-            - spell_checker: SpellChecker
-            - session: SessionManager
-            + execute(): Boolean
-            + undo(): Boolean
-            - _print_node(node: HtmlElement, prefix: String, is_last: Boolean): void
-        }
-
-        class SpellCheckCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class DirTreeCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-    }
-
-    package io {
-        class ReadCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class SaveCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-
-        class InitCommand {
-            + execute(): Boolean
-            + undo(): Boolean
-        }
-    }
-
     CommandProcessor o-- Command
     CommandProcessor o-- CommandObserver
+    Editor "1" *-- "1" CommandProcessor
+}
 
+' 命令子包水平平铺
+package edit #E2DDFF {
+    class AppendCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class DeleteCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class EditTextCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class EditIdCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class InsertCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+    
     Command <|-- AppendCommand
     Command <|-- DeleteCommand
     Command <|-- EditTextCommand
     Command <|-- EditIdCommand
     Command <|-- InsertCommand
+}
+
+package display #FFE2DD {
+    class PrintTreeCommand {
+        - show_id: Boolean
+        - check_spelling: Boolean
+        - spell_checker: SpellChecker
+        - session: SessionManager
+        + execute(): Boolean
+        + undo(): Boolean
+        - _print_node(node: HtmlElement, prefix: String, is_last: Boolean): void
+    }
+
+    class SpellCheckCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class DirTreeCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+    
     Command <|-- PrintTreeCommand
     Command <|-- SpellCheckCommand
     Command <|-- DirTreeCommand
-    Command <|-- ReadCommand
-    Command <|-- SaveCommand
-    Command <|-- InitCommand
-    Command --> HtmlModel : operates on >
-}
-
-' 会话管理模块
-package session {
-    class Editor {
-        + filename: String
-        + model: HtmlModel
-        + processor: CommandProcessor
-        + modified: Boolean
-        + show_id: Boolean
-        + load(): Boolean
-        + save(): Boolean
-        + execute_command(command: Command): Boolean
-        + undo(): Boolean
-        + redo(): Boolean
-        + save_as(new_filename: String): Boolean
-    }
-
-    class SessionManager {
-        - editors: Dict
-        + active_editor: Editor
-        - state_manager: SessionState
-        + restore_session(): Boolean
-        + save_session(): Boolean
-        + load(filename: String): Boolean
-        + save(filename: String): Boolean
-        + close(): Boolean
-        + editor_list(): void
-        + set_show_id(show: Boolean): Boolean
-        + get_show_id(): Boolean
-        + execute_command(command: Command): Boolean
-        + get_active_model(): HtmlModel
-        + get_active_processor(): CommandProcessor
-    }
-
-    class SessionState {
-        - state_file: String
-        + load_state(): Dict
-        + save_state(files: List, active: String, settings: Dict): Boolean
-    }
-
-    SessionManager "1" o-- "*" Editor : editors >
-    SessionManager "1" o-- "1" SessionState
-    Editor "1" *-- "1" HtmlModel
-    Editor "1" *-- "1" CommandProcessor
-}
-
-' 应用层
-package application {
-    class Application {
-        - session_manager: SessionManager
-        - model: HtmlModel
-        - processor: CommandProcessor
-        - parser: CommandParser
-        - running: Boolean
-        + run(): void
-        + print_help(): void
-        + on_command_event(event_type: String, kwargs: Dict): void
-    }
-
-    class CommandParser {
-        - processor: CommandProcessor
-        - model: HtmlModel
-        + parse(command_line: String): Command
-    }
-
-    Application "1" *-- "1" SessionManager
-    Application "1" *-- "1" CommandParser
-    Application ..|> CommandObserver
-}
-
-' IO模块
-package io {
-    class HtmlParser {
-        + parse(html_content: String, model: HtmlModel): void
-        + parse_string(html_content: String, model: HtmlModel): HtmlElement
-        + parse_file(file_path: String, model: HtmlModel): HtmlElement
-        - _create_element_tree(soup_element): HtmlElement
-        - _register_element_ids(element: HtmlElement, model: HtmlModel): void
-    }
-
-    HtmlParser ..> HtmlModel : fill >
-    HtmlParser ..> HtmlElement : creates >
-}
-
-' 工具模块
-package utils {
-    class HtmlValidator {
-        {static} + validate_model(model: HtmlModel): Boolean
-        {static} + validate_element(element: HtmlElement): Boolean
-        {static} + collect_ids(element: HtmlElement, id_set: Set): void
-    }
-
-    HtmlValidator ..> HtmlModel : validates >
-    HtmlValidator ..> HtmlElement : validates >
-}
-
-' 拼写检查模块
-package spellcheck {
-    class SpellChecker {
-        - language_tool
-        - cache: Dict
-        + check_text(text: String): List<SpellError>
-        + get_suggestions(word: String): List<String>
-    }
-
-    class SpellError {
-        + word: String
-        + suggestions: List<String>
-        + context: String
-        + start_pos: Integer
-        + end_pos: Integer
-    }
-
-    SpellChecker ..> SpellError : creates >
     PrintTreeCommand ..> SpellChecker : uses >
     SpellCheckCommand ..> SpellChecker : uses >
 }
 
+package io_commands #DDE2FF {
+    class ReadCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class SaveCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+
+    class InitCommand {
+        + execute(): Boolean
+        + undo(): Boolean
+    }
+    
+    Command <|-- ReadCommand
+    Command <|-- SaveCommand
+    Command <|-- InitCommand
+    ReadCommand ..> HtmlParser : uses >
+    SaveCommand ..> HtmlModel : uses >
+}
+
 ' 主要依赖关系
-ReadCommand ..> HtmlParser : uses >
-SaveCommand ..> HtmlModel : uses >
+HtmlValidator ..> HtmlModel : validates >
+HtmlValidator ..> HtmlElement : validates >
+HtmlParser ..> HtmlModel : fill >
+HtmlParser ..> HtmlElement : creates >
 Application ..> SessionManager : manages >
 SessionManager ..> Command : executes >
 Command ..> HtmlModel : modifies >
 
+' 确保关键组件之间的连接可见
+core -[hidden]-> commands
+commands -[hidden]-> edit
+commands -[hidden]-> display
+commands -[hidden]-> io_commands
 @enduml
