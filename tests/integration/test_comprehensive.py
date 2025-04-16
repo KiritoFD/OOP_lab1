@@ -13,7 +13,7 @@ from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display import PrintTreeCommand, SpellCheckCommand
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError
-from src.spellcheck.checker import SpellChecker, SpellError  # Fixed import to use SpellError from checker module
+from src.commands.spellcheck.checker import SpellChecker, SpellError  # Fixed import to use SpellError from checker module
 
 class TestComprehensiveIntegration:
     """全面的集成测试，覆盖所有功能"""
@@ -190,8 +190,8 @@ class TestComprehensiveIntegration:
         assert new_model.find_by_id('item1').text == '列表项1'
         assert new_model.find_by_id('copyright').text == '© 2023'
     
-    @patch('src.spellcheck.checker.SpellChecker')
-    def test_spellcheck(self, mock_checker_class, setup, capsys):
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
+    def test_spellcheck(self, mock_check_text, setup, capsys):
         """测试拼写检查功能"""
         model = setup['model']
         processor = setup['processor']
@@ -205,8 +205,7 @@ class TestComprehensiveIntegration:
         processor.execute(AppendCommand(model, 'p', 'p2', 'body', 'Another exampl of misspellng.'))
         
         # 配置Mock拼写检查器
-        mock_checker = mock_checker_class.return_value
-        mock_checker.check_text.side_effect = lambda text: (
+        mock_check_text.side_effect = lambda text: (
             [SpellError('paragreph', ['paragraph'], text, 10, 19)] if 'paragreph' in text else
             [SpellError('errrors', ['errors'], text, 24, 31)] if 'errrors' in text else
             [SpellError('exampl', ['example'], text, 8, 14)] if 'exampl' in text else

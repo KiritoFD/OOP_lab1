@@ -1,10 +1,10 @@
 import pytest
-from src.spellcheck.checker import SpellChecker, SpellError
+from src.commands.spellcheck.checker import SpellChecker, SpellError
 from src.core.html_model import HtmlModel
 from src.core.element import HtmlElement
 from src.core.exceptions import ElementNotFoundError
 try:
-    from src.spellcheck.adapters.language_tool import LanguageToolAdapter
+    from src.commands.spellcheck.adapters.language_tool import LanguageToolAdapter
 except ImportError:
     # Mock adapter when dependency is missing
     class LanguageToolAdapter:

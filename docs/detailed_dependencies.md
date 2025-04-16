@@ -20,8 +20,8 @@
 - `src.commands.observer` → `abc`
 - `src.commands.command_exceptions` → `src.core.exceptions`
 - `src.commands.display.base` → `src.commands.base`
-- `src.commands.display.print_tree` → `src.core.html_model`, `src.core.element`, `src.spellcheck.checker`, `src.commands.base`
-- `src.commands.display.spell_check` → `src.core.html_model`, `src.core.element`, `src.spellcheck.checker`, `src.commands.base`
+- `src.commands.display.print_tree` → `src.core.html_model`, `src.core.element`, `src.commands.spellcheck.checker`, `src.commands.base`
+- `src.commands.display.spell_check` → `src.core.html_model`, `src.core.element`, `src.commands.spellcheck.checker`, `src.commands.base`
 - `src.commands.display.dir_tree` → `os`, `src.commands.base`
 - `src.commands.edit.append_command` → `src.commands.base`, `src.core.html_model`, `src.core.element`, `src.core.exceptions`, `src.commands.command_exceptions`
 - `src.commands.edit.delete_command` → `src.commands.base`, `src.core.html_model`, `src.core.element`, `src.core.exceptions`, `src.commands.command_exceptions`
@@ -35,8 +35,8 @@
 - `src.io.writer` → `src.core.html_model`, `src.core.element`, `html`
 - `src.session.session_manager` → `src.core.html_model`, `src.commands.base`, `src.commands.io`, `src.commands.command_exceptions`, `src.commands.display`, `src.session.state.session_state`, `os`
 - `src.session.state.session_state` → `os`, `json`, `typing`
-- `src.spellcheck.checker` → `abc`, `typing`, `dataclasses`, `re`, `os`, `json`, `spellchecker`
-- `src.spellcheck.adapters.language_tool` → `typing`, `spellchecker`, `src.spellcheck.checker`
+- `src.commands.spellcheck.checker` → `abc`, `typing`, `dataclasses`, `re`, `os`, `json`, `spellchecker`
+- `src.commands.spellcheck.adapters.language_tool` → `typing`, `spellchecker`, `src.commands.spellcheck.checker`
 - `src.utils.html_utils` → `html`
 - `src.utils.validator` → `typing`, `src.core.html_model`, `src.core.element`, `src.core.exceptions`
 
@@ -104,7 +104,7 @@ graph TD
     session_state["src.session.state.session_state"]
     io_parser["src.io.parser"]
     io_writer["src.io.writer"]
-    spellcheck["src.spellcheck.checker"]
+    spellcheck["src.commands.spellcheck.checker"]
   
     %% 核心依赖关系
     core_element --> typing

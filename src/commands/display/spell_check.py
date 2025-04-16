@@ -1,6 +1,6 @@
 from ...core.html_model import HtmlModel
 from ...core.element import HtmlElement
-from ...spellcheck.checker import SpellChecker, SpellErrorReporter, ConsoleReporter
+from ...commands.spellcheck.checker import SpellChecker, SpellErrorReporter, ConsoleReporter
 from .base import DisplayCommand
 from ..base import Command
 

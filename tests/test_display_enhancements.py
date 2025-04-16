@@ -7,7 +7,7 @@ import shutil
 from src.session.session_manager import SessionManager
 from src.commands.edit.append_command import AppendCommand
 from src.commands.display import PrintTreeCommand
-from src.spellcheck.checker import SpellChecker, SpellError
+from src.commands.spellcheck.checker import SpellChecker, SpellError
 from src.commands.io import InitCommand
 
 class TestDisplayEnhancements:
@@ -127,7 +127,7 @@ class TestDisplayEnhancements:
         assert "#header1" not in output
         assert "#paragraph" not in output
     
-    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
     @patch('builtins.print')
     def test_tree_display_with_spelling_errors(self, mock_print, mock_check_text, setup_session):
         """测试带有拼写错误标记的树形结构"""
@@ -178,7 +178,7 @@ class TestDisplayEnhancements:
             if "<h1>" in call:
                 assert "[X]" not in call, "h1元素不应有错误标记"
     
-    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
     @patch('builtins.print')
     def test_tree_display_with_errors_no_ids(self, mock_print, mock_check_text, setup_session):
         """测试同时有拼写错误标记但不显示ID的树形结构"""

@@ -8,7 +8,7 @@ from src.core.html_model import HtmlModel
 from src.commands.display import SpellCheckCommand
 from src.commands.base import CommandProcessor
 from src.commands.io import InitCommand
-from src.spellcheck.checker import SpellChecker, SpellError, SpellErrorReporter, ConsoleReporter
+from src.commands.spellcheck.checker import SpellChecker, SpellError, SpellErrorReporter, ConsoleReporter
 
 class CustomSpellCheckError(Exception):
     """用于测试的自定义拼写检查错误"""
@@ -60,14 +60,11 @@ class TestSpellCheckCommand:
         
         return model
     
-    @patch('src.spellcheck.checker.SpellChecker')  # 修改mock路径
-    def test_spell_check_basic(self, mock_checker_class, spell_check_model, processor, capsys):
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
+    def test_spell_check_basic(self, mock_check_text, spell_check_model, processor, capsys):
         """测试基本的拼写检查功能"""
-        # 设置模拟的检查器行为
-        mock_checker = mock_checker_class.return_value
-
         # 模拟拼写错误
-        mock_checker.check_text.side_effect = lambda text: [
+        mock_check_text.side_effect = lambda text: [
             SpellError('paragreph', ['paragraph'], 
                       "This paragreph has", 5, 14)
         ] if "paragreph" in text else []
@@ -86,11 +83,9 @@ class TestSpellCheckCommand:
         assert "paragreph" in output
         assert "paragraph" in output  # 建议词
 
-    @patch('src.spellcheck.checker.SpellChecker')
-    def test_spell_check_multiple_errors(self, mock_checker_class, spell_check_model, processor, capsys):
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
+    def test_spell_check_multiple_errors(self, mock_check_text, spell_check_model, processor, capsys):
         """测试多个拼写错误的情况"""
-        mock_checker = mock_checker_class.return_value
-
         # 修改mock检查器行为，确保检查所有文本
         def mock_check(text):
             errors = []
@@ -105,7 +100,7 @@ class TestSpellCheckCommand:
                                        "and misspeled words", 4, 13))
             return errors
 
-        mock_checker.check_text.side_effect = mock_check
+        mock_check_text.side_effect = mock_check
 
         cmd = SpellCheckCommand(spell_check_model)
         processor.execute(cmd)
@@ -119,8 +114,8 @@ class TestSpellCheckCommand:
         assert "exampel" in output and "example" in output
         assert "misspeled" in output and "misspelled" in output
 
-    @patch('src.spellcheck.checker.SpellChecker')
-    def test_spell_check_with_html_file(self, mock_checker_class, processor, capsys):
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
+    def test_spell_check_with_html_file(self, mock_check_text, processor, capsys):
         """测试使用HTML文件内容进行拼写检查"""
         # 创建模型并加载HTML文件
         model = HtmlModel()
@@ -131,9 +126,6 @@ class TestSpellCheckCommand:
         model.append_child('body', 'p', 'p1', 'This is corect text with an eror.')
         model.append_child('body', 'div', 'container')
         model.append_child('container', 'p', 'p2', 'Another paragreph with misstakes.')
-        
-        # 设置模拟检查器
-        mock_checker = mock_checker_class.return_value
         
         # 模拟拼写错误
         def mock_check(text):
@@ -148,7 +140,7 @@ class TestSpellCheckCommand:
                 errors.append(SpellError('misstakes', ['mistakes'], text, text.find('misstakes'), text.find('misstakes')+9))
             return errors
 
-        mock_checker.check_text.side_effect = mock_check
+        mock_check_text.side_effect = mock_check
         
         cmd = SpellCheckCommand(model)
         processor.execute(cmd)
@@ -163,8 +155,8 @@ class TestSpellCheckCommand:
         assert "paragreph" in output and "paragraph" in output
         assert "misstakes" in output and "mistakes" in output
 
-    @patch('src.spellcheck.checker.SpellChecker')
-    def test_spell_check_specific_element(self, mock_checker_class, initialized_model, processor, capsys):
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
+    def test_spell_check_specific_element(self, mock_check_text, initialized_model, processor, capsys):
         """测试特定元素的拼写检查功能"""
         model = initialized_model
         
@@ -175,8 +167,7 @@ class TestSpellCheckCommand:
         model.append_child('content', 'p', 'p3', 'This text is fine too')
         
         # 设置模拟检查器
-        mock_checker = mock_checker_class.return_value
-        mock_checker.check_text.side_effect = lambda text: [
+        mock_check_text.side_effect = lambda text: [
             SpellError('speling', ['spelling'], 'This has a speling mistake', 10, 17)
         ] if "speling" in text else []
         
@@ -190,7 +181,7 @@ class TestSpellCheckCommand:
         assert "speling" in output and "spelling" in output
         assert "发现" in output  # 确保检测到错误
 
-    @patch('src.spellcheck.checker.SpellChecker', autospec=True)
+    @patch('src.commands.spellcheck.checker.SpellChecker', autospec=True)
     def test_error_handling(self, mock_checker_class, initialized_model, processor, capsys):
         """测试拼写检查的错误处理"""
         model = initialized_model

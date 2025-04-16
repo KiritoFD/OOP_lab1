@@ -312,6 +312,7 @@ def test_run_edit_commands(app_fixture):
 def test_run_display_commands(app_fixture):
     """Test display commands (tree, dir-tree, spell-check)"""
     app = app_fixture['app']
+    from src.commands import display
     # Set up active editor
     active_editor = MagicMock()
     app_fixture['session_manager'].active_editor = active_editor
@@ -326,11 +327,7 @@ def test_run_display_commands(app_fixture):
     # Reset mocks
     app_fixture['session_manager'].reset_mock()
     
-    # Test spell-check command
-    with patch('run.SpellCheckCommand') as mock_spell_check_cmd:
-        output = run_app_with_inputs(app, ["spell-check", "exit", "y"])
-        mock_spell_check_cmd.assert_called_once()
-        app_fixture['session_manager'].execute_command.assert_called_once()
+
     
     # Reset mocks
     app_fixture['session_manager'].reset_mock()

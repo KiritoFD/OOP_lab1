@@ -21,7 +21,7 @@ from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.edit.edit_id_command import EditIdCommand
 from src.commands.display import PrintTreeCommand, SpellCheckCommand, DirTreeCommand
 from src.session.state.session_state import SessionState
-from src.spellcheck.checker import SpellChecker
+from src.commands.spellcheck.checker import SpellChecker
 
 class TestSystemIntegration:
     """系统集成测试 - 全面覆盖所有功能"""
@@ -171,7 +171,7 @@ class TestSystemIntegration:
                 assert "index.html*" in output.replace(" ", "")  # 带*表示已打开
         
         # 6. 测试拼写检查功能
-        with patch('src.spellcheck.checker.SpellChecker.check_text') as mock_check:
+        with patch('src.commands.spellcheck.checker.SpellChecker.check_text') as mock_check:
             mock_check.side_effect = lambda text: (
                 [MagicMock(wrong_word="misspeled", suggestions=["misspelled"], context=text)]
                 if "misspeled" in text else []
@@ -272,6 +272,7 @@ class TestSystemIntegration:
             assert hasattr(TestDisplayEnhancements, 'test_tree_display_with_id')
             assert hasattr(TestDisplayEnhancements, 'test_tree_display_without_id')
             assert hasattr(TestDisplayEnhancements, 'test_tree_display_with_spelling_errors')
+            assert hasattr(TestDisplayEnhancements, 'test_tree_display_with_errors_no_ids')
             
             # 检查dir_tree_command测试
             assert hasattr(TestDirTreeCommand, 'test_dir_tree_command_basic')
@@ -309,6 +310,7 @@ class TestSystemIntegration:
             "树形显示(含ID)": TestDisplayEnhancements.test_tree_display_with_id,
             "树形显示(不含ID)": TestDisplayEnhancements.test_tree_display_without_id,
             "拼写检查标记": TestDisplayEnhancements.test_tree_display_with_spelling_errors,
+            "拼写检查标记(无ID)": TestDisplayEnhancements.test_tree_display_with_errors_no_ids,
             "目录树显示": TestDirTreeCommand.test_dir_tree_command_basic,
             "打开文件标记": TestDirTreeCommand.test_open_files_marking,
             "会话状态保存": TestSessionState.test_save_load_state,

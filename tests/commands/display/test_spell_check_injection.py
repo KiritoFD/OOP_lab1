@@ -6,7 +6,7 @@ import sys
 from src.core.html_model import HtmlModel
 from src.commands.display import SpellCheckCommand
 from src.commands.base import CommandProcessor
-from src.spellcheck.checker import SpellChecker, SpellError, SpellErrorReporter
+from src.commands.spellcheck.checker import SpellChecker, SpellError, SpellErrorReporter
 
 # 创建一个模拟的拼写检查器类
 class MockSpellChecker(SpellChecker):
@@ -146,7 +146,7 @@ class TestSpellCheckWithDI:
         sys.stdout = captured_output
         
         # 使用patch来隔离外部服务调用
-        with patch('src.spellcheck.checker.PySpellChecker') as mock_py_checker:
+        with patch('src.commands.spellcheck.checker.PySpellChecker') as mock_py_checker:
             # 配置模拟对象的行为
             instance = MagicMock()
             instance.unknown.return_value = ["mistakee"]

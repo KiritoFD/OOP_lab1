@@ -9,7 +9,7 @@ from src.commands.display import PrintTreeCommand
 from src.commands.base import CommandProcessor
 from src.commands.edit.append_command import AppendCommand
 from src.core.exceptions import ElementNotFoundError
-from src.spellcheck.checker import SpellChecker, SpellError
+from src.commands.spellcheck.checker import SpellChecker, SpellError
 
 class TestPrintTreeCommand:
     def get_project_root(self):
@@ -385,7 +385,7 @@ class TestPrintTreeCommand:
         assert '#item1' not in output_text
         assert '#item2' not in output_text
     
-    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
     @patch('builtins.print')
     def test_execute_with_spelling_check(self, mock_print, mock_check_text, model):
         """测试拼写检查功能"""
@@ -482,7 +482,7 @@ class TestPrintTreeCommand:
         assert '#level4' in output_text
         assert '#deep-text' in output_text
     
-    @patch('src.spellcheck.checker.SpellChecker.check_text')
+    @patch('src.commands.spellcheck.checker.SpellChecker.check_text')
     @patch('builtins.print')
     def test_spelling_check_with_multiple_errors(self, mock_print, mock_check_text, model):
         """测试多个拼写错误的情况"""

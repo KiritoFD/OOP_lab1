@@ -1,6 +1,6 @@
 from src.commands.base import Command
 from src.core.html_model import HtmlModel
-from src.spellcheck.checker import SpellChecker
+from src.commands.spellcheck.checker import SpellChecker
 
 class PrintTreeCommand(Command):
     """HTML树结构显示命令"""
