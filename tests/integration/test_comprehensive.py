@@ -15,6 +15,7 @@ from src.commands.display import PrintTreeCommand, SpellCheckCommand
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError
 from src.commands.spellcheck.checker import SpellChecker, SpellError  # Fixed import to use SpellError from checker module
 
+@pytest.mark.integration
 class TestComprehensiveIntegration:
     """全面的集成测试，覆盖所有功能"""
     

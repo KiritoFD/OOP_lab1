@@ -15,6 +15,7 @@ from src.commands.display import PrintTreeCommand, SpellCheckCommand
 from src.commands.command_exceptions import CommandExecutionError
 from src.core.exceptions import ElementNotFoundError, DuplicateIdError
 
+@pytest.mark.integration
 class TestEdgeCases:
     """测试各种边缘情况和异常处理"""
     

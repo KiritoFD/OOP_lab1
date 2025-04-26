@@ -12,6 +12,7 @@ from src.commands.edit.delete_command import DeleteCommand
 from src.commands.edit.edit_text_command import EditTextCommand
 from src.commands.display import PrintTreeCommand
 
+@pytest.mark.unit
 class TestPerformance:
     """性能测试"""
     

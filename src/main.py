@@ -78,38 +78,6 @@ class Editor:
             self.modified = True  # Set modified flag to True on successful redo 
             return True
         return False
-    
-    def has_spelling_errors(self, node):
-        """检查节点是否有拼写错误"""
-        from src.utils.spell_checker import SpellChecker
-        
-        # 获取拼写检查器的单例实例
-        checker = SpellChecker.get_instance()
-        
-        # 检查节点文本
-        if node.text and checker.has_errors(node.text):
-            return True
-            
-        # 检查属性值
-        for attr_name, attr_value in node.attributes.items():
-            if checker.has_errors(attr_value):
-                return True
-                
-        # 递归检查子节点
-        for child in node.children:
-            if self.has_spelling_errors(child):
-                return True
-                
-        return False
-        
-    def mark_spelling_errors(self, node, formatter):
-        """标记有拼写错误的节点"""
-        has_errors = self.has_spelling_errors(node)
-        if has_errors:
-            formatter.tag_prefix = "[X] "
-        else:
-            formatter.tag_prefix = ""
-        return formatter
 
 
 class SessionManager:
@@ -322,55 +290,6 @@ class SessionManager:
             return True  # 默认显示ID
         return self.active_editor.show_id
     
-    def dir_tree(self):
-        """显示当前工作目录的目录树结构"""
-        current_dir = os.getcwd()
-        print(f"目录树: {current_dir}")
-        self._print_dir_tree(current_dir, "")
-    
-    def _print_dir_tree(self, directory, prefix):
-        """递归打印目录树"""
-        if not os.path.exists(directory):
-            print(f"{prefix}目录不存在: {directory}")
-            return
-            
-        # 获取目录内容
-        try:
-            items = sorted(os.listdir(directory))
-        except PermissionError:
-            print(f"{prefix}无权限访问: {directory}")
-            return
-            
-        # 计算正在编辑的文件的规范路径，用于比较
-        open_files = set(os.path.normpath(f) for f in self.editors.keys())
-            
-        # 打印目录项
-        for i, item in enumerate(items):
-            # 跳过隐藏文件
-            if item.startswith('.'):
-                continue
-                
-            # 构建完整路径
-            path = os.path.join(directory, item)
-            is_last = i == len(items) - 1 or all(f.startswith('.') for f in items[i+1:])
-            
-            # 设置当前项的前缀
-            current_prefix = "└── " if is_last else "├── "
-            
-            # 确定下一级的前缀
-            next_prefix = "    " if is_last else "│   "
-            
-            # 检查是否是目录
-            if os.path.isdir(path):
-                print(f"{prefix}{current_prefix}{item}/")
-                self._print_dir_tree(path, prefix + next_prefix)
-            else:
-                # 检查文件是否正在编辑
-                if os.path.normpath(path) in open_files:
-                    print(f"{prefix}{current_prefix}{item} *")
-                else:
-                    print(f"{prefix}{current_prefix}{item}")
-    
     def execute_command(self, command):
         """在活动编辑器上执行命令"""
         if not self.active_editor:
@@ -378,13 +297,8 @@ class SessionManager:
             return False
         
         # 如果是PrintTreeCommand并且没有设置show_id，使用编辑器的设置
-        if isinstance(command, PrintTreeCommand):
-            if command.show_id is None:
-                command.show_id = self.active_editor.show_id
-                
-            # 添加拼写错误标记功能
-            if hasattr(command, 'formatter') and command.formatter:
-                command.pre_format_hook = self.active_editor.mark_spelling_errors
+        if isinstance(command, PrintTreeCommand) and command.show_id is None:
+            command.show_id = self.active_editor.show_id
         
         return self.active_editor.execute_command(command)
     

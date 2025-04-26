@@ -1,257 +1,115 @@
-# HTML Editor Project
+# HTML编辑器项目
 
-This project implements an interactive HTML editor with advanced features like spell checking, tree visualization, and command-based manipulation of HTML documents.
+<div align="center">
+  <img src="docs/images/logo.png" alt="HTML编辑器" width="200" height="200">
+  <br>
+  <p>
+    <strong>一款功能强大的HTML文档编辑工具</strong>
+  </p>
+  <p>
+    <a href="#快速开始">快速开始</a> •
+    <a href="#核心功能">核心功能</a> •
+    <a href="#文档导航">文档</a> •
+    <a href="#架构特点">架构</a> •
+    <a href="#测试">测试</a>
+  </p>
+</div>
 
-## Project Structure
-
-### Project Tree
-
-```
-HTML Editor Project
-├── __init__.py
-├── application
-│   ├── __init__.py
-│   ├── command_parser.py
-│   └── main.py
-├── commands
-│   ├── __init__.py
-│   ├── base.py
-│   ├── command_exceptions.py
-│   ├── observer.py
-│   ├── display
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── dir_tree.py
-│   │   ├── print_tree.py
-│   │   └── spell_check.py
-│   ├── do
-│   │   ├── __init__.py
-│   │   ├── history.py
-│   │   ├── redo.py
-│   │   ├── undo.py
-│   │   └── undoredo.py
-│   ├── edit
-│   │   ├── __init__.py
-│   │   ├── append_command.py
-│   │   ├── delete_command.py
-│   │   ├── edit_id_command.py
-│   │   ├── edit_text_command.py
-│   │   └── insert_command.py
-│   └── io
-│       ├── __init__.py
-│       ├── init.py
-│       ├── read.py
-│       └── save.py
-├── core
-│   ├── __init__.py
-│   ├── element.py
-│   ├── exceptions.py
-│   └── html_model.py
-├── io
-│   ├── __init__.py
-│   ├── parser.py
-│   └── writer.py
-├── session
-│   ├── session_manager.py
-│   └── state
-│       ├── __init__.py
-│       └── session_state.py
-├── spellcheck
-│   ├── __init__.py
-│   ├── checker.py
-│   └── adapters
-│       ├── __init__.py
-│       └── language_tool.py
-├── utils
-│   ├── html_utils.py
-│   └── validator.py
-├── tests   #test部分结构与src基本照应，不再完整写出
-│   ├── application
-│   ├── commands
-│   ├── core
-│   ├── html_utils
-│   ├── integration
-│   ├── io
-│   └── input
-├── docs
-├── run.py
-└── requirements.txt
-```
-
-### Environment Requirements
-
-- Python 3.9+ | Dependencies: See `requirements.txt`
-- conda环境直接export出来的配置在env.yaml
-
-### Installation & Running
+## 快速开始
 
 ```bash
+# 克隆仓库
+git clone https://github.com/yourusername/html-editor.git
+cd html-editor
+
+# 安装依赖
 pip install -r requirements.txt
-python run.py                  # Normal startup
-python run.py --new            # Force create a new session
-python run.py file.html        # Open a specific file at startup
+
+# 启动编辑器
+python run.py
 ```
 
-### Testing
+## 核心功能
+
+- 📝 **HTML编辑** - 创建、修改和删除HTML元素
+- 💾 **文件操作** - 读写HTML文件，支持多文件会话
+- 🔍 **树形可视化** - 直观展示文档结构
+- ↩️ **撤销/重做** - 完整的操作历史控制
+- 📊 **拼写检查** - 智能识别和修正拼写错误
+- 🔄 **会话管理** - 支持多文件同时编辑
+
+## 文档导航
+
+| 文档 | 说明 |
+|------|------|
+| [**📚 项目概述**](docs/PROJECT_OVERVIEW.md) | 项目总体介绍与结构说明 |
+| [**🏗️ 架构设计**](docs/architecture.md) | 分层架构与模块说明 |
+| [**📊 系统图表**](docs/complete_project_diagram.md) | 可视化系统架构与流程 |
+| [**🔗 依赖关系**](docs/detailed_dependencies.md) | 模块间依赖详解 |
+| [**📖 用户指南**](docs/USER_GUIDE.md) | 使用说明与命令示例 |
+| [**📋 UML类图**](system_architecture.puml) | 系统UML类图 |
+| [**🧪 测试指南**](README_TESTING.md) | 测试系统使用方法 |
+
+## 架构特点
+
+编辑器采用精心设计的分层架构：
+
+```
+应用层 → 会话层 → 命令层 → 核心层 → I/O层 → 工具层
+                  ↓             ↓
+               拼写检查层 ←─────┘
+```
+
+### 设计模式
+
+系统融合多种设计模式，构建灵活可扩展的架构：
+
+- **命令模式** - 封装所有编辑操作，支持撤销/重做
+- **组合模式** - HTML元素树的优雅实现
+- **访问者模式** - 无侵入式树遍历和处理
+- **观察者模式** - 命令执行状态通知机制
+- **适配器模式** - 无缝整合第三方库
+
+更多架构细节请参阅[架构设计文档](docs/architecture.md)。
+
+## 项目结构
+
+```
+src/               # 源代码目录
+├── application/   # 应用层
+├── commands/      # 命令层
+├── core/          # 核心层
+├── io/            # IO层
+├── session/       # 会话层
+├── spellcheck/    # 拼写检查层
+└── utils/         # 工具层
+tests/             # 测试目录
+├── unit/          # 单元测试
+├── integration/   # 集成测试
+└── system/        # 系统测试
+```
+
+## 测试
 
 ```bash
-pytest                          # Run all tests
-pytest tests/core/              # Test core modules
-pytest tests/commands/edit/     # Test edit commands
-pytest tests/io/                # Test I/O functionality
-pytest tests/spellcheck/        # Test spell checking
-pytest -m unit                  # Run unit tests
-pytest -m integration           # Run integration tests
-pytest --cov=. tests/         # Generate test coverage report
+# 运行所有测试
+python -m pytest
+
+# 运行单元测试
+python -m pytest tests/unit/
+
+# 运行集成测试
+python -m pytest tests/integration/
+
+# 运行特定测试
+python -m pytest tests/unit/core/
+
+# 使用交互式测试工具
+python run_interactive_tests.py
 ```
 
-## Test Coverage Report | Overall Coverage: 95%
+详细测试指南请参阅[测试文档](README_TESTING.md)。
 
-### Full Coverage Report
+## 许可证
 
-```
-pytest --cov . >test_out.txt
-```
-
-| File Path                                          | Statements | Missed | Coverage |
-| :------------------------------------------------- | :--------: | :----: | :------: |
-| cleanup_cache.py                                   |     0     |   0   |   100%   |
-| conftest.py                                        |     13     |   0   |   100%   |
-| main.py                                            |    161    |   30   |   81%   |
-| __init__.py                                      |     0     |   0   |   100%   |
-| application\__init__.py                      |     0     |   0   |   100%   |
-| application\command_parser.py                  |     87     |   47   |   46%   |
-| commands\__init__.py                         |     0     |   0   |   100%   |
-| commands\base.py                               |     59     |   8   |   86%   |
-| commands\command_exceptions.py                 |     9     |   1   |   89%   |
-| commands\display\__init__.py                 |     0     |   0   |   100%   |
-| commands\display\base.py                       |     0     |   0   |   100%   |
-| commands\display\dir_tree.py                   |     0     |   0   |   100%   |
-| commands\display\print_tree.py                 |     0     |   0   |   100%   |
-| commands\display\spell_check.py                |     0     |   0   |   100%   |
-| commands\display.py                            |    145    |   19   |   87%   |
-| commands\edit\__init__.py                    |     6     |   0   |   100%   |
-| commands\edit\append_command.py                |     52     |   4   |   92%   |
-| commands\edit\delete_command.py                |     48     |   5   |   90%   |
-| commands\edit\edit_id_command.py               |     56     |   11   |   80%   |
-| commands\edit\edit_text_command.py             |     40     |   7   |   82%   |
-| commands\edit\insert_command.py                |     73     |   17   |   77%   |
-| commands\io\__init__.py                      |     0     |   0   |   100%   |
-| commands\io\init.py                            |     0     |   0   |   100%   |
-| commands\io\read.py                            |     0     |   0   |   100%   |
-| commands\io\save.py                            |     0     |   0   |   100%   |
-| commands\io.py                                 |    120    |   27   |   78%   |
-| commands\observer.py                           |     5     |   1   |   80%   |
-| core\__init__.py                             |     0     |   0   |   100%   |
-| core\element.py                                |     48     |   17   |   65%   |
-| core\exceptions.py                             |     20     |   2   |   90%   |
-| core\html_model.py                             |     96     |   28   |   71%   |
-| io\__init__.py                               |     0     |   0   |   100%   |
-| io\parser.py                                   |    125    |   48   |   62%   |
-| io\writer.py                                   |     47     |   17   |   64%   |
-| session\session_manager.py                     |    203    |   19   |   91%   |
-| session\state\__init__.py                    |     0     |   0   |   100%   |
-| session\state\session_state.py                 |     39     |   4   |   90%   |
-| spellcheck\__init__.py                       |     0     |   0   |   100%   |
-| spellcheck\adapters\__init__.py              |     0     |   0   |   100%   |
-| spellcheck\adapters\language_tool.py           |     10     |   8   |   20%   |
-| spellcheck\checker.py                          |     79     |   20   |   75%   |
-| utils\html_utils.py                            |     9     |   6   |   33%   |
-| application\main.py                           |    126    |   70   |   44%   |
-| tests\__init__.py                                |     0     |   0   |   100%   |
-| tests\application\__init__.py                    |     0     |   0   |   100%   |
-| tests\application\test_command_parser.py           |     0     |   0   |   100%   |
-| tests\commands\__init__.py                       |     0     |   0   |   100%   |
-| tests\commands\display\test_print_tree_command.py  |    161    |   30   |   81%   |
-| tests\commands\display\test_spell_check_command.py |    135    |   3   |   98%   |
-| tests\commands\edit\__init__.py                  |     0     |   0   |   100%   |
-| tests\commands\edit\conftest.py                    |     7     |   0   |   100%   |
-| tests\commands\edit\test_append_command.py         |    100    |   4   |   96%   |
-| tests\commands\edit\test_delete_command.py         |     90     |   6   |   93%   |
-| tests\commands\edit\test_edit_id_command.py        |    103    |   3   |   97%   |
-| tests\commands\edit\test_edit_text_command.py      |    104    |   1   |   99%   |
-| tests\commands\edit\test_insert_command.py         |     78     |   3   |   96%   |
-| tests\commands\io\__init__.py                    |     0     |   0   |   100%   |
-| tests\commands\io\test_io.py                       |     0     |   0   |   100%   |
-| tests\commands\io\test_save_command.py             |     0     |   0   |   100%   |
-| tests\conftest.py                                  |     23     |   1   |   96%   |
-| tests\core\test_element.py                         |     0     |   0   |   100%   |
-| tests\core\test_html_model.py                      |     0     |   0   |   100%   |
-| tests\core\test_html_model_comprehensive.py        |     0     |   0   |   100%   |
-| tests\core\test_parser.py                          |     0     |   0   |   100%   |
-| tests\html_utils\test_html_utils.py                |     0     |   0   |   100%   |
-
-## 测试覆盖率
-
-当前总体测试覆盖率：**95%**
-
-### 主要模块覆盖率
-
-| 模块                        | 语句数 | 未覆盖 | 覆盖率 |
-|-----------------------------|--------|--------|--------|
-| run.py                      | 161    | 1      | 99%    |
-| src\application\main.py     | 125    | 1      | 99%    |
-| src\commands\display\print_tree.py | 79 | 18  | 77%    |
-| src\commands\edit\insert_command.py | 73 | 17 | 77%    |
-| src\commands\io\save.py     | 71     | 15     | 79%    |
-| src\core\html_model.py      | 101    | 6      | 94%    |
-| src\session\session_manager.py | 203 | 20    | 90%    |
-| src\spellcheck\checker.py   | 97     | 20     | 79%    |
-| tests\test_run.py           | 169    | 20     | 88%    |
-| tests\integration\test_edge_cases.py | 178 | 23 | 87%   |
-
-### 测试覆盖率热图
-
-可以通过运行以下命令查看详细的测试覆盖率报告：
-
-```bash
-pytest --cov=src --cov-report=html
-```
-
-然后在 `htmlcov/index.html` 中打开覆盖率报告查看详细信息。
-
-## Available Commands
-
-### Edit Commands
-
-- **insert** `insert parent_id tag_name [id]` - Insert a new element as a child of parent_id
-- **append** `append element_id text` - Append text to an element
-- **delete** `delete element_id` - Delete an element
-- **edit-text** `edit-text element_id new_text` - Change element's text content
-- **edit-id** `edit-id old_id new_id` - Change element's ID
-
-### Display Commands
-
-- **print-tree** `print-tree` or `tree` - Display the current HTML in a tree structure
-- **spell-check** `spell-check` - Check for spelling errors in text content
-- **dir-tree** `dir-tree [directory_path]` - Display a directory in a tree structure
-- **showid** `showid true|false` - Toggle display of element IDs in the tree
-
-### I/O Commands
-
-- **read** `read file_path` - Read HTML from a file
-- **save** `save [file_path]` - Save the current HTML to a file
-- **init** `init` - Create a blank HTML structure
-
-### Undo/Redo
-
-- **undo** `undo` - Undo the last edit operation
-- **redo** `redo` - Redo the last undone operation
-
-### Session Management Commands
-
-- **load** `load file_path` - Open a new file or load an existing file
-- **editor-list** `editor-list` or `list` - Display all open files
-- **edit** `edit file_path` - Switch to a specified file
-- **close** `close` - Close the current editing session
-- **exit/quit** `exit` or `quit` - Exit the program
-- **help** `help` - Display command help
-
-## Notes
-
-1. You must initialize the HTML model using `read` or `init` before using other commands.
-2. I/O operations will clear the command history, making undo/redo unavailable.
-3. Element IDs must be unique within the document.
-4. `html`, `head`, `body`, and `title` tags automatically use their tag names as IDs.
-5. The program automatically saves session state upon exit, allowing recovery on the next startup.
-6. Nodes with spelling errors are marked as `[X]` in the tree view.
+本项目采用 MIT 许可证 - 详见 LICENSE 文件
