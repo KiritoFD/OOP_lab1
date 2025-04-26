@@ -40,15 +40,15 @@ python run.py
 
 ## 文档导航
 
-| 文档 | 说明 |
-|------|------|
-| [**📚 项目概述**](docs/PROJECT_OVERVIEW.md) | 项目总体介绍与结构说明 |
-| [**🏗️ 架构设计**](docs/architecture.md) | 分层架构与模块说明 |
-| [**📊 系统图表**](docs/complete_project_diagram.md) | 可视化系统架构与流程 |
-| [**🔗 依赖关系**](docs/detailed_dependencies.md) | 模块间依赖详解 |
-| [**📖 用户指南**](docs/USER_GUIDE.md) | 使用说明与命令示例 |
-| [**📋 UML类图**](system_architecture.puml) | 系统UML类图 |
-| [**🧪 测试指南**](README_TESTING.md) | 测试系统使用方法 |
+| 文档                                                   | 说明                   |
+| ------------------------------------------------------ | ---------------------- |
+| [**📚 项目概述**](docs/PROJECT_OVERVIEW.md)         | 项目总体介绍与结构说明 |
+| [**🏗️ 架构设计**](docs/architecture.md)           | 分层架构与模块说明     |
+| [**📊 系统图表**](docs/complete_project_diagram.md) | 可视化系统架构与流程   |
+| [**🔗 依赖关系**](docs/detailed_dependencies.md)    | 模块间依赖详解         |
+| [**📖 用户指南**](docs/USER_GUIDE.md)               | 使用说明与命令示例     |
+| [**📋 UML类图**](system_architecture.puml)          | 系统UML类图            |
+| [**🧪 测试指南**](README_TESTING.md)                | 测试系统使用方法       |
 
 ## 架构特点
 
